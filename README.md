@@ -1,103 +1,273 @@
-
 {
   "project_metadata": {
     "name": "AI School Hub",
     "repository_url": "https://github.com/IDSS123a/ai-school-hub-new",
     "version": "1.0.0",
-    "type": "Single Page Application (SPA)"
+    "application_type": "Single Page Application (SPA)",
+    "execution_target": "Modern evergreen browsers",
+    "rebuild_mode": "Full deterministic rebuild from scratch with complete functional and visual parity"
   },
-  "executive_summary": {
-    "purpose": "AI School Hub is an enterprise-grade, AI-powered educational platform designed to streamline administrative and pedagogical tasks. It utilizes Google's Gemini API to generate lesson plans, event schedules, grant proposals, and educational visuals, while providing tools for real-time collaboration and user management.",
-    "target_audience": [
-      "Teachers (Lesson planning, material generation)",
-      "School Administrators (Policy memos, event planning)",
-      "Directors (Strategic planning, analytics)",
-      "Counselors (Expert consultation logs)",
-      "Secretaries (Communication drafts)"
+
+  "ai_role_definition": {
+    "persona": "Senior Principal Software Engineer and UI Architect with 30+ years of experience",
+    "mandate": "Rebuild the entire application independently using production-grade standards and strict adherence to this specification",
+    "non_negotiables": [
+      "No assumptions beyond this document",
+      "No simplifications",
+      "No deviations in architecture, theming, or behavior"
     ]
   },
-  "technical_architecture": {
-    "languages": [
-      "TypeScript (Logic & Typing)",
-      "TSX (React Components)",
-      "HTML5 (Structure)",
-      "CSS3 (via Tailwind)"
+
+  "executive_summary": {
+    "purpose": "AI School Hub is an enterprise-grade, AI-powered educational productivity platform designed to centralize pedagogical content generation, administrative workflows, and school-wide collaboration without a traditional backend.",
+    "primary_objectives": [
+      "Streamline educational and administrative workflows",
+      "Standardize AI-assisted content generation",
+      "Simulate real-time collaboration using browser-native APIs",
+      "Provide a professional, minimal, distraction-free workspace"
     ],
-    "frameworks_and_libraries": {
-      "core": "React 18",
-      "bundler_environment": "ES Modules (via browser native imports/ESM.sh)",
-      "styling": "Tailwind CSS (CDN loaded with custom config)",
-      "icons": "Lucide React",
-      "charts": "Recharts",
-      "rich_text_editor": "Quill.js",
-      "ai_integration": "@google/genai SDK",
-      "export_tools": "html2pdf.js, html-docx-js-typescript"
-    },
-    "programming_techniques": {
-      "state_management": "React useState, useContext (ToastProvider), and useRef",
-      "service_layer_pattern": "API calls and logic encapsulated in 'services/' directory",
-      "streaming_responses": "Handling chunked data from Gemini API for real-time text generation",
-      "mock_backend": "LocalStorage used to simulate Database persistence (User history, Admin DB)",
-      "event_driven_architecture": "BroadcastChannel API used for cross-tab 'real-time' collaboration simulation",
-      "responsive_design": "Mobile-first approach with collapsible sidebars and responsive grids",
-      "error_handling": "React Error Boundaries and try/catch blocks in async services"
+    "target_roles": {
+      "teacher": "Lesson plans, worksheets, teaching materials",
+      "administrator": "Policies, announcements, schedules",
+      "director": "Strategic planning and summaries",
+      "counselor": "Consultation documentation",
+      "secretary": "Official communication drafts"
     }
   },
+
+  "technical_architecture": {
+    "language_stack": [
+      "TypeScript (strict typing)",
+      "React TSX",
+      "HTML5",
+      "CSS3"
+    ],
+    "runtime_environment": {
+      "module_system": "Native ES Modules",
+      "bundler": "None",
+      "dependency_loading": "ESM.sh CDN imports defined directly in index.html"
+    },
+    "frameworks_and_libraries": {
+      "ui_framework": "React 18",
+      "styling": "Tailwind CSS via CDN with inline tailwind.config",
+      "icons": "lucide-react",
+      "charts": "recharts",
+      "rich_text_editor": "quill",
+      "ai_sdk": "@google/genai",
+      "export_tools": [
+        "html2pdf.js",
+        "html-docx-js-typescript"
+      ]
+    }
+  },
+
+  "routing_and_navigation": {
+    "strategy": "Conditional rendering only",
+    "implementation": "Single activeTab state managed in App.tsx",
+    "constraints": [
+      "No React Router",
+      "No URL-based routing",
+      "Navigation must not trigger page reloads"
+    ]
+  },
+
+  "authentication_and_roles": {
+    "authentication_type": "Mocked role-based authentication",
+    "implementation": {
+      "service": "adminService.ts",
+      "storage": "LocalStorage"
+    },
+    "roles": [
+      "teacher",
+      "administrator",
+      "director",
+      "counselor",
+      "secretary"
+    ],
+    "constraints": [
+      "No real authentication provider",
+      "Role determines UI access and available tools"
+    ]
+  },
+
+  "ai_prompt_system": {
+    "prompt_definitions": "Predefined only",
+    "source": "mockDatabase.ts",
+    "user_capabilities": [
+      "Execute existing AI tools",
+      "Request new tools via NewPromptModal"
+    ],
+    "restrictions": [
+      "Users cannot create executable prompts dynamically",
+      "New prompt requests are non-functional submissions only"
+    ]
+  },
+
+  "state_and_data_model": {
+    "state_management": [
+      "React useState",
+      "React useContext (ToastContext only)",
+      "React useRef where direct DOM interaction is required"
+    ],
+    "persistence": {
+      "storage": "LocalStorage",
+      "domains": [
+        "User sessions",
+        "Generated content",
+        "Prompt history",
+        "Admin records"
+      ]
+    },
+    "real_time_collaboration": {
+      "mechanism": "BroadcastChannel API",
+      "scope": [
+        "Chat synchronization",
+        "Editor presence",
+        "Document updates"
+      ],
+      "limitations": "Same-origin, same-browser simulation only"
+    }
+  },
+
   "design_system": {
-    "ui_ux_philosophy": "Clean, enterprise professional aesthetic with focus on readability and accessibility. Uses a split-pane interface for the editor (Input Panel vs. Preview/Chat Panel).",
-    "color_palette": {
+    "ui_philosophy": [
+      "Enterprise-grade minimalism",
+      "High readability",
+      "Low cognitive load",
+      "Clear visual hierarchy per component"
+    ],
+    "color_system": {
       "base_colors": {
-        "primary": "#FFCB29 (Yellow/Gold)",
-        "secondary": "#08ABE6 (Cyan/Light Blue)",
-        "accent": "#035EA1 (Dark Blue)"
+        "primary": "#FFCB29",
+        "secondary": "#08ABE6",
+        "accent": "#035EA1"
       },
-      "neutrals": "Slate (Derived from blue hues for cohesion)",
-      "semantic_mapping": {
-        "success": "Mapped to Secondary variants (Cyan)",
-        "error": "Mapped to Accent variants (Dark Blue/Red override)",
-        "warning": "Mapped to Primary variants (Yellow)"
-      }
+      "rules": [
+        "No hardcoded colors anywhere in the codebase",
+        "All colors must be derived from base colors",
+        "Opacity and brightness variants are allowed",
+        "Light Mode and Dark Mode must be fully preserved"
+      ]
     },
     "theming": {
-      "mechanism": "Tailwind 'class' strategy (Light/Dark mode)",
-      "implementation": "Global CSS variables for root colors, strict Tailwind config overrides in index.html"
+      "strategy": "Tailwind class-based theming",
+      "selectors": {
+        "light": ":root, [data-theme='light']",
+        "dark": ".dark, [data-theme='dark']"
+      },
+      "requirements": [
+        "Instant global theme switching",
+        "No visual regressions between themes",
+        "Consistent contrast across UI states"
+      ]
+    },
+    "typography": {
+      "font_family": [
+        "Poppins",
+        "Inter",
+        "sans-serif"
+      ],
+      "hierarchy": "No global typographic rules; all sizing and weight handled via Tailwind utilities at component level"
+    },
+    "accessibility": {
+      "standard": "General best practices",
+      "requirements": [
+        "Semantic HTML",
+        "Visible focus rings",
+        "Keyboard navigability"
+      ]
+    },
+    "animations": {
+      "allowed": true,
+      "style": "Subtle only",
+      "examples": [
+        "fade-in",
+        "slide",
+        "hover-scale"
+      ]
     }
   },
-  "project_tree": {
-    "root": [
-      "index.html (Entry point, contains global Tailwind config and CSS)",
-      "index.tsx (React mount point)",
-      "App.tsx (Main router and layout shell)",
-      "types.ts (TypeScript interfaces and Enums)",
-      "metadata.json (Project configuration)",
-      "README.md (This file)"
+
+  "application_structure": {
+    "root_files": [
+      "index.html",
+      "index.tsx",
+      "App.tsx",
+      "types.ts",
+      "metadata.json",
+      "README.md"
     ],
-    "components": [
-      "Login.tsx (Authentication screen with aesthetic background)",
-      "Dashboard.tsx (Main landing view with tool grid and activity feed)",
-      "EditorLayout.tsx (Core workspace container)",
-      "AdminPanel.tsx (User management table and analytics)",
-      "SettingsModal.tsx (Theme, language, and account settings)",
-      "NewPromptModal.tsx (Form to request new AI tools)",
-      "ShareModal.tsx (Collaboration invite UI)",
-      "ErrorBoundary.tsx (React error catcher)"
+    "components": {
+      "auth": ["Login.tsx"],
+      "core": ["Dashboard.tsx", "EditorLayout.tsx"],
+      "admin": ["AdminPanel.tsx"],
+      "modals": [
+        "SettingsModal.tsx",
+        "NewPromptModal.tsx",
+        "ShareModal.tsx"
+      ],
+      "infrastructure": ["ErrorBoundary.tsx"]
+    },
+    "editor_components": [
+      "FormPanel.tsx",
+      "PreviewPanel.tsx",
+      "ChatPanel.tsx"
     ],
-    "components_editor": [
-      "FormPanel.tsx (Dynamic input fields based on PromptDefinition)",
-      "PreviewPanel.tsx (Renders generated content, visualizations, and analytics)",
-      "ChatPanel.tsx (Context-aware chat interface with the AI)"
-    ],
-    "context": [
-      "ToastContext.tsx (Global notification system)"
-    ],
+    "context": ["ToastContext.tsx"],
     "services": [
-      "geminiService.ts (Google AI integration, streaming, image generation)",
-      "firebase.ts (Mocked authentication layer)",
-      "adminService.ts (Mocked user database and admin logic)",
-      "contentService.ts (LocalStorage wrapper for saving docs/templates)",
-      "collaborationService.ts (BroadcastChannel logic for sync)",
-      "mockDatabase.ts (Static definitions for Prompts and Announcements)"
+      "geminiService.ts",
+      "firebase.ts",
+      "adminService.ts",
+      "contentService.ts",
+      "collaborationService.ts",
+      "mockDatabase.ts"
     ]
   },
-  "reconstruction_instructions": "To rebuild this application, an AI agent must: 1. Preserve the file structure exactly as listed. 2. Ensure 'index.html' includes the specific <script> block defining the 'palette' object and 'tailwind.config' overrides. 3. Do not introduce external node_modules; usage must rely on the ES Modules import map defined in index.html. 4. Maintain the strict separation of concerns between UI components and the 'services/' layer. 5. Ensure all colors use the 'primary', 'secondary', and 'accent' utility classes provided by the custom Tailwind config."
+
+  "rebuild_execution_order": [
+    "Create index.html with Tailwind CDN, font imports, and inline tailwind.config",
+    "Define global CSS variables for theme tokens",
+    "Implement index.tsx React mount",
+    "Implement App.tsx layout shell and activeTab logic",
+    "Build core UI components",
+    "Implement editor subsystem",
+    "Implement services layer",
+    "Wire context providers and error boundaries",
+    "Validate Light/Dark theme parity",
+    "Perform final functional and visual audit"
+  ],
+
+  "hard_constraints": {
+    "no_node_environment": true,
+    "no_backend_services": true,
+    "no_external_css_files": true,
+    "no_unapproved_dependencies": true,
+    "no_color_deviations": true,
+    "no_router_library": true
+  },
+
+  "quality_gates": {
+    "code_quality": [
+      "Strict TypeScript typing",
+      "No unused variables",
+      "Clear separation of concerns"
+    ],
+    "ui_quality": [
+      "Consistent spacing",
+      "Responsive layouts",
+      "No layout shifts or visual artifacts"
+    ],
+    "functional_quality": [
+      "All AI tools produce output",
+      "Streaming AI responses function correctly",
+      "Theme switching applies globally"
+    ]
+  },
+
+  "completion_criteria": {
+    "functional_parity": "100%",
+    "visual_parity": "100%",
+    "theme_integrity": "100%",
+    "architectural_compliance": "Mandatory"
+  }
 }
