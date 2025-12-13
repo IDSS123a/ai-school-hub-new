@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Facebook, Check, X, Loader2, AlertCircle, Eye, EyeOff, FileText, Shield } from 'lucide-react';
+import { Facebook, Check, X, Loader2, AlertCircle, Eye, EyeOff, FileText, Shield, KeyRound } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface LoginProps {
@@ -110,12 +110,31 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoggingIn(true);
     // Simulate login delay
     setTimeout(() => {
-        // Standard Email/Pass login (Demo)
+        // Check for specific admin email simulation
+        const isAdmin = email.includes('admin') || email.includes('school.ba');
+        
         onLogin({
             name: "Teacher User",
             email: email,
             picture: "https://ui-avatars.com/api/?name=Teacher+User&background=2563eb&color=fff",
-            memberSince: getMockMemberDate()
+            memberSince: getMockMemberDate(),
+            role: isAdmin ? 'admin' : 'teacher',
+            status: 'active'
+        });
+    }, 800);
+  };
+
+  // BACKDOOR FOR ADMIN TESTING
+  const handleAdminLogin = () => {
+    setIsLoggingIn(true);
+    setTimeout(() => {
+        onLogin({
+            name: "System Admin",
+            email: "admin@school.ba",
+            picture: "https://ui-avatars.com/api/?name=Admin&background=1e293b&color=fff",
+            memberSince: getMockMemberDate(),
+            role: 'admin',
+            status: 'active'
         });
     }, 800);
   };
@@ -163,7 +182,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     email: "facebook.user@idss.ba",
                     picture: "https://ui-avatars.com/api/?name=Facebook+User&background=1877F2&color=fff",
                     given_name: "Facebook User",
-                    memberSince: getMockMemberDate()
+                    memberSince: getMockMemberDate(),
+                    role: 'teacher',
+                    status: 'active'
                 });
              }, 1000);
              return true;
@@ -177,13 +198,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         window.FB.login((response: any) => {
             if (response.authResponse) {
                 window.FB.api('/me', { fields: 'name, email, picture' }, (userInfo: any) => {
-                    console.log('Facebook Login Success:', userInfo);
                     onLogin({
                         name: userInfo.name,
                         email: userInfo.email,
                         picture: userInfo.picture?.data?.url || "https://ui-avatars.com/api/?name=FB&background=1877F2&color=fff",
                         given_name: userInfo.name.split(' ')[0],
-                        memberSince: getMockMemberDate()
+                        memberSince: getMockMemberDate(),
+                        role: 'teacher',
+                        status: 'active'
                     });
                 });
             } else {
@@ -210,14 +232,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         console.warn("Detected Preview Environment (Non-Localhost). Bypassing real Google OAuth to prevent 'Access Blocked' error.");
         
         setTimeout(() => {
-            const demoUser: UserProfile = {
+            onLogin({
                 name: "Google Demo User",
                 email: "demo.teacher@idss.ba",
                 picture: "https://ui-avatars.com/api/?name=Google+User&background=db4437&color=fff",
                 given_name: "Google User",
-                memberSince: getMockMemberDate()
-            };
-            onLogin(demoUser);
+                memberSince: getMockMemberDate(),
+                role: 'teacher',
+                status: 'active'
+            });
         }, 1000); 
         return;
     }
@@ -241,7 +264,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   const userData = await userInfoResponse.json();
                   const fullUser: UserProfile = {
                       ...userData,
-                      memberSince: getMockMemberDate()
+                      memberSince: getMockMemberDate(),
+                      role: 'teacher',
+                      status: 'active'
                   };
                   console.log("Google Login Success, User:", fullUser);
                   onLogin(fullUser);
@@ -262,7 +287,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 name: "Google Demo User",
                 email: "demo.teacher@idss.ba",
                 picture: "https://ui-avatars.com/api/?name=Google+User&background=db4437&color=fff",
-                memberSince: getMockMemberDate()
+                memberSince: getMockMemberDate(),
+                role: 'teacher',
+                status: 'active'
              });
           }
         });
@@ -280,7 +307,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         name: "Google Demo User",
         email: "demo.teacher@idss.ba",
         picture: "https://ui-avatars.com/api/?name=Google+User&background=db4437&color=fff",
-        memberSince: getMockMemberDate()
+        memberSince: getMockMemberDate(),
+        role: 'teacher',
+        status: 'active'
       });
     }
   };
@@ -587,13 +616,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                </button>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 flex gap-4">
               <button 
                 type="submit"
                 disabled={isLoggingIn}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-4 px-8 rounded-md transition-all shadow-md hover:shadow-lg w-auto inline-block disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 duration-200"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-4 px-8 rounded-md transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 duration-200"
               >
                 {isLoggingIn ? 'Signing in...' : 'Log in'}
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleAdminLogin}
+                title="Test Admin Access"
+                className="bg-slate-800 hover:bg-slate-900 text-white p-4 rounded-md shadow-md hover:shadow-lg transition-all"
+              >
+                <KeyRound size={24} />
               </button>
             </div>
           </form>

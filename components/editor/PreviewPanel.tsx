@@ -1,7 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { NarrativeData, EvaluationData, PromptDefinition } from '../../types';
-import { Loader2, FileText, Image as ImageIcon, BarChart2, Bold, Italic, List, ListOrdered, Heading1, Heading2, Underline, Sparkles, Brain } from 'lucide-react';
+import { Loader2, FileText, Image as ImageIcon, BarChart2, Sparkles, Brain } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+
+// Declare Quill on window
+declare global {
+    interface Window {
+        Quill: any;
+    }
+}
 
 interface PreviewPanelProps {
   activeView: 'document' | 'narrative' | 'analytics' | 'chat';
@@ -15,15 +22,6 @@ interface PreviewPanelProps {
   onContentUpdate?: (newContent: string) => void;
 }
 
-const ToolbarButton = ({ icon: Icon, onClick, active = false }: { icon: any, onClick: () => void, active?: boolean }) => (
-    <button 
-        onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-        className={`p-1.5 rounded hover:bg-slate-200 transition-colors ${active ? 'bg-slate-200 text-primary' : 'text-slate-600'}`}
-    >
-        <Icon size={16} />
-    </button>
-);
-
 const PreviewPanel: React.FC<PreviewPanelProps> = ({
   activeView,
   content,
@@ -35,30 +33,68 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   formData,
   onContentUpdate
 }) => {
-  const editorRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<any>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const isQuillInitialized = useRef(false);
 
-  // Sync external content changes to the editor ONLY when generating or initially loading
-  // We do NOT want to overwrite user edits if they are typing
+  // Initialize Quill when activeView is 'document' and we are NOT generating
   useEffect(() => {
-    if (editorRef.current && (isGenerating || !editorRef.current.innerHTML)) {
-       // Convert newlines to breaks if it looks like plain text
-       const formatted = content.includes('<') ? content : content.replace(/\n/g, '<br/>');
-       if (editorRef.current.innerHTML !== formatted) {
-           editorRef.current.innerHTML = formatted;
-       }
+    if (activeView === 'document' && !isGenerating && editorContainerRef.current) {
+        if (!isQuillInitialized.current) {
+            // Check if Quill is loaded
+            if (window.Quill) {
+                quillRef.current = new window.Quill(editorContainerRef.current, {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            ['clean']
+                        ]
+                    }
+                });
+                
+                // Initialize content
+                if (content) {
+                    quillRef.current.clipboard.dangerouslyPasteHTML(content);
+                }
+
+                // Handle changes
+                quillRef.current.on('text-change', () => {
+                     if (onContentUpdate && quillRef.current) {
+                         onContentUpdate(quillRef.current.root.innerHTML);
+                     }
+                });
+
+                isQuillInitialized.current = true;
+            } else {
+                console.error("Quill JS not loaded");
+            }
+        } else if (quillRef.current && content && quillRef.current.root.innerHTML !== content) {
+            // Only update if significantly different and not focused (basic check)
+            // Ideally we don't update from props if user is editing, but we do if generation just finished
+            // Since we remount on generation start/end, this logic is mostly for switching tabs
+            const currentText = quillRef.current.getText();
+            // Simple heuristic: if editor is empty but content exists, paste it.
+            if (currentText.trim().length === 0 && content.length > 0) {
+                 quillRef.current.clipboard.dangerouslyPasteHTML(content);
+            }
+        }
     }
-  }, [content, isGenerating]);
 
-  const handleInput = () => {
-      if (editorRef.current && onContentUpdate) {
-          onContentUpdate(editorRef.current.innerHTML);
-      }
-  };
-
-  const execCmd = (cmd: string, val: string = '') => {
-      document.execCommand(cmd, false, val);
-      if (editorRef.current) editorRef.current.focus();
-  };
+    // Cleanup logic if needed, but Quill instance is usually persistent for the component lifecycle
+    return () => {
+        // We don't destroy Quill here to avoid losing state on fast tab switches if we kept it alive,
+        // but since we conditionally render the div, we might need to reset.
+        if (activeView !== 'document' || isGenerating) {
+             isQuillInitialized.current = false;
+             quillRef.current = null;
+        }
+    };
+  }, [activeView, isGenerating]); // Removed 'content' from deps to avoid loop
 
   if (!content && !isGenerating) {
     return (
@@ -95,51 +131,43 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
       {/* Document View */}
       {activeView === 'document' && (
-        <div className="p-8 max-w-4xl mx-auto w-full">
-            <div id="document-preview" className="bg-white shadow-lg rounded-xl min-h-[800px] border border-slate-200 animate-in fade-in duration-500 relative flex flex-col">
+        <div className="p-8 max-w-4xl mx-auto w-full h-full flex flex-col">
+            <div id="document-preview" className="bg-white shadow-lg rounded-xl h-full border border-slate-200 animate-in fade-in duration-500 relative flex flex-col overflow-hidden">
             
-            {/* Rich Text Toolbar */}
-            <div className="sticky top-0 z-20 bg-slate-50 border-b border-slate-200 p-2 flex items-center gap-1 rounded-t-xl">
-                <ToolbarButton icon={Bold} onClick={() => execCmd('bold')} />
-                <ToolbarButton icon={Italic} onClick={() => execCmd('italic')} />
-                <ToolbarButton icon={Underline} onClick={() => execCmd('underline')} />
-                <div className="w-px h-4 bg-slate-300 mx-1"></div>
-                <ToolbarButton icon={Heading1} onClick={() => execCmd('formatBlock', 'H1')} />
-                <ToolbarButton icon={Heading2} onClick={() => execCmd('formatBlock', 'H2')} />
-                <div className="w-px h-4 bg-slate-300 mx-1"></div>
-                <ToolbarButton icon={List} onClick={() => execCmd('insertUnorderedList')} />
-                <ToolbarButton icon={ListOrdered} onClick={() => execCmd('insertOrderedList')} />
-            </div>
-
-            <div className="p-12 flex-1" id="document-preview-content">
-                {/* Header Simulation */}
-                <div className="border-b-2 border-slate-900 pb-4 mb-8 flex justify-between items-end">
+            <div className="p-6 border-b border-slate-200 bg-slate-50">
+                <div className="flex justify-between items-end">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">{formData.topic || formData.assignment || prompt.title}</h1>
-                        <p className="text-slate-500 text-sm mt-1">Generated by AI School Hub • {new Date().toLocaleDateString()}</p>
+                        <h1 className="text-2xl font-bold text-slate-900">{formData.topic || formData.assignment || prompt.title}</h1>
+                        <p className="text-slate-500 text-xs mt-1">Generated by AI School Hub • {new Date().toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
                         <div className="text-xs uppercase tracking-wider font-bold text-slate-400">{prompt.category}</div>
                     </div>
                 </div>
-                
-                {/* Mini Loading Indicator during streaming if content exists */}
-                {isGenerating && content && (
-                    <div className="fixed bottom-8 right-8 bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 text-sm animate-in slide-in-from-bottom-5">
-                         <Loader2 size={14} className="animate-spin" />
-                         <span>Streaming...</span>
-                    </div>
-                )}
-
-                {/* Editable Content Area */}
-                <div 
-                    ref={editorRef}
-                    contentEditable={true}
-                    onInput={handleInput}
-                    className="prose prose-slate max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h2:text-primary prose-h2:mt-6 prose-p:text-slate-700 focus:outline-none min-h-[500px]"
-                    dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br/>') }} 
-                />
             </div>
+            
+            {/* Content Area */}
+            <div className="flex-1 bg-white relative">
+                 {/* 
+                    If Generating: Show standard div with streaming content 
+                    If Done: Show Quill Editor 
+                 */}
+                 {isGenerating ? (
+                    <div className="p-8 prose prose-slate max-w-none">
+                         <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br/>') }} />
+                         {/* Streaming indicator */}
+                         <div className="flex items-center gap-2 text-primary text-sm mt-4 animate-pulse">
+                            <Loader2 size={14} className="animate-spin" />
+                            <span>Writing...</span>
+                         </div>
+                    </div>
+                 ) : (
+                    <div className="h-full flex flex-col">
+                        <div ref={editorContainerRef} className="flex-1 text-base"></div>
+                    </div>
+                 )}
+            </div>
+
             </div>
         </div>
       )}

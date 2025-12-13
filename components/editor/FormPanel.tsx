@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PromptDefinition } from '../../types';
 import { Loader2, RefreshCw, ChevronRight, Save, Sparkles } from 'lucide-react';
 
@@ -19,8 +19,45 @@ const FormPanel: React.FC<FormPanelProps> = ({
   isGenerating,
   onSaveTemplate
 }) => {
+  const [panelWidth, setPanelWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
+  const startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    startX.current = e.clientX;
+    startWidth.current = panelWidth;
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - startX.current;
+      const newWidth = Math.max(300, Math.min(startWidth.current + delta, 800));
+      setPanelWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
   return (
-    <div className="w-1/3 min-w-[350px] max-w-[450px] bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden">
+    <div 
+      style={{ width: `${panelWidth}px` }}
+      className={`bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden relative flex-shrink-0 ${isResizing ? 'select-none' : ''}`}
+    >
+      {/* Content */}
       <div className="p-6 border-b border-slate-100 flex justify-between items-start">
         <div>
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -101,6 +138,12 @@ const FormPanel: React.FC<FormPanelProps> = ({
             <Save size={18} /> Save as Template
         </button>
       </div>
+
+      {/* Resize Handle */}
+      <div 
+        onMouseDown={startResizing}
+        className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-blue-500/20 z-50 transition-colors opacity-0 hover:opacity-100 active:opacity-100 active:bg-blue-500/50"
+      />
     </div>
   );
 };

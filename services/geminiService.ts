@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { EvaluationData, NarrativeData } from "../types";
+import { EvaluationData, NarrativeData, PromptRequestForm } from "../types";
 
 // Initialize the Google GenAI SDK
 // API Key must be set in your environment variables (e.g. .env.local)
@@ -203,4 +203,62 @@ export const evaluatePedagogy = async (content: string): Promise<EvaluationData>
     });
 
     return JSON.parse(response.text || '{}');
+};
+
+/**
+ * Takes a user's prompt request form and architects a valid JSON PromptDefinition.
+ * This effectively acts as an AI Developer creating new tools.
+ */
+export const architectPromptFromRequest = async (request: PromptRequestForm): Promise<string> => {
+    const systemInstruction = `You are a Senior Prompt Engineer and System Architect.
+    Your task is to take a raw feature request for a new AI tool and convert it into a strictly structured JSON object 
+    that matches the 'PromptDefinition' interface used in our application.
+
+    The user input might be in Bosnian or English. You MUST output the final JSON content in ENGLISH.
+
+    The 'PromptDefinition' interface structure is:
+    {
+      id: string; // unique-kebab-case-id
+      title: string; // Clear, short title
+      category: string; // Suggest a category (e.g., "Planning", "Assessment", "Administrative")
+      description: string; // 1 sentence description + Example Usage string
+      icon: string; // Choose the most appropriate Lucide React icon name (e.g. "BookOpen", "Brain", "PenTool", "Calculator", "Users", "Calendar", "FileText")
+      fields: [ // Array of input fields the user needs to fill out
+         { 
+           key: string; 
+           label: string; 
+           type: 'text' | 'textarea' | 'select' | 'number';
+           options?: string[]; // Only for 'select' type
+           placeholder?: string;
+         }
+      ];
+      systemInstruction: string; // The high-quality metaprompt that instructs the AI how to behave based on the user's requirements.
+    }
+
+    CRITICAL INSTRUCTION FOR 'systemInstruction' field:
+    - This must be a highly detailed, professional prompt.
+    - It must incorporate the user's requested Tone, Style, Constraints, and Role.
+    - It must strictly enforce the output format requested (e.g. "No Markdown", "JSON only", etc).
+    
+    Output ONLY the valid JSON object. No markdown code fences.`;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `User Request Data:
+        Project Title: ${request.projectTitle}
+        Goal: ${request.primaryGoal}
+        Task: ${request.specificTask}
+        Inputs Provided by User: ${request.userInputs}
+        Desired Output: ${request.outputStructure}
+        Tone/Style: ${request.toneStyle}
+        Constraints: ${request.keywords} ${request.avoidTopics}
+        Persona: ${request.rolePersona}
+        
+        Generate the JSON definition now.`,
+        config: {
+            responseMimeType: "application/json"
+        }
+    });
+
+    return response.text || "{}";
 };

@@ -70,12 +70,37 @@ export interface UserState {
   recentDocs: GeneratedContent[];
 }
 
+// --- USER MANAGEMENT & ADMIN TYPES ---
+
+export type UserRole = 'admin' | 'teacher' | 'editor';
+export type UserStatus = 'active' | 'pending' | 'suspended';
+
+export interface UserAuditLog {
+  action: string;
+  timestamp: number;
+  details?: string;
+}
+
+export interface UserUsageStats {
+  loginCount: number;
+  totalSessionMinutes: number;
+  lastLogin: number;
+  averageSessionMinutes: number;
+}
+
 export interface UserProfile {
+  id?: string; // Optional for legacy compatibility
   name: string;
   email: string;
   picture: string;
   given_name?: string;
-  memberSince?: number; // Timestamp for when user joined
+  memberSince?: number;
+  
+  // Admin & Analytics Fields
+  role?: UserRole;
+  status?: UserStatus;
+  stats?: UserUsageStats;
+  auditLogs?: UserAuditLog[];
 }
 
 export interface SavedTemplate {
@@ -85,4 +110,33 @@ export interface SavedTemplate {
   promptId: string;
   formData: Record<string, string>;
   createdAt: number;
+}
+
+// --- NEW PROMPT REQUEST TYPES ---
+
+export interface PromptRequestForm {
+  timestamp: string;
+  email: string;
+  fullName: string;
+  company: string;
+  projectTitle: string;
+  primaryGoal: string;
+  specificTask: string;
+  users: string;
+  targetAudience: string;
+  platform: string;
+  outputStructure: string;
+  userInputs: string;
+  toneStyle: string;
+  lengthDetail: string;
+  branding: string;
+  outputFormat: string;
+  keywords: string;
+  avoidTopics: string;
+  rolePersona: string;
+  examples: string;
+  prdRequest: boolean;
+  deadline: string;
+  callRequest: boolean;
+  additionalContext: string;
 }
