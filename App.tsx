@@ -45,13 +45,13 @@ import AdminPanel from './components/AdminPanel';
 import Login from './components/Login';
 import ErrorBoundary from './components/ErrorBoundary';
 import SettingsModal from './components/SettingsModal';
-import NewPromptModal from './components/NewPromptModal'; // New Import
+import NewPromptModal from './components/NewPromptModal'; 
 import { ToastProvider, useToast } from './context/ToastContext';
 import { PromptDefinition, UserProfile, SavedTemplate, UserRole } from './types';
 import { PROMPT_DEFINITIONS, getPromptById } from './services/mockDatabase';
-// Import auth and mock functions from local service
 import { auth, signInAnonymously, signOut } from './services/firebase';
 import { getTemplates } from './services/contentService';
+import { initAdminDB } from './services/adminService';
 
 interface SidebarItemProps {
   icon: any;
@@ -66,15 +66,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, descriptio
   <button 
     onClick={onClick}
     className={`w-full flex items-start gap-3 px-4 py-3 text-sm font-medium transition-colors duration-200 relative text-left group
-      ${active ? 'bg-primary/10 text-primary border-r-4 border-primary' : 'text-slate-600 hover:bg-slate-100'}`}
+      ${active ? 'bg-primary/10 text-primary border-r-4 border-primary dark:bg-primary/20 dark:text-blue-300' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
   >
-    <Icon size={18} className={`mt-0.5 flex-shrink-0 ${active ? 'text-primary' : 'text-slate-400 group-hover:text-slate-600'}`} />
+    <Icon size={18} className={`mt-0.5 flex-shrink-0 ${active ? 'text-primary dark:text-blue-300' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between">
          <span className="truncate font-semibold">{label}</span>
       </div>
       {description && (
-        <p className={`text-[10px] leading-tight mt-0.5 line-clamp-2 ${active ? 'text-primary/70' : 'text-slate-400'}`}>
+        <p className={`text-[10px] leading-tight mt-0.5 line-clamp-2 ${active ? 'text-primary/70 dark:text-blue-300/70' : 'text-slate-400'}`}>
           {description}
         </p>
       )}
@@ -129,20 +129,32 @@ const App = () => {
   // Profile Menu & Settings State
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showNewPromptModal, setShowNewPromptModal] = useState(false); // State for new modal
+  const [showNewPromptModal, setShowNewPromptModal] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Check local storage for auth persistence simulation
+  // Initialize DB on App Load
+  useEffect(() => {
+    initAdminDB();
+  }, []);
+
+  // Check local storage for auth and dark mode
   useEffect(() => {
     try {
         const storedAuth = localStorage.getItem('isAuth');
         const storedUser = localStorage.getItem('userProfile');
+        const storedTheme = localStorage.getItem('theme');
+        
         if (storedAuth === 'true') {
           setIsAuthenticated(true);
           if (storedUser) {
             setUser(JSON.parse(storedUser));
           }
+        }
+
+        if (storedTheme === 'dark') {
+            setDarkMode(true);
+            document.documentElement.classList.add('dark');
         }
     } catch (e) {
         console.error("Local storage error", e);
@@ -170,7 +182,6 @@ const App = () => {
     if (!isResizingSidebar) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Limit width between 200px and 480px
       const newWidth = Math.max(200, Math.min(e.clientX, 480));
       setSidebarWidth(newWidth);
     };
@@ -189,11 +200,14 @@ const App = () => {
 
   // Handle Dark Mode
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    if (!darkMode) {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    if (newMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   };
 
@@ -207,7 +221,7 @@ const App = () => {
       }
     };
     window.addEventListener('resize', handleResize);
-    handleResize();
+    handleResize(); // Initial check
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -223,7 +237,7 @@ const App = () => {
       }
   }, [user]);
 
-  // Listener for template updates (triggered from EditorLayout)
+  // Listener for template updates
   useEffect(() => {
       const handleTemplateUpdate = () => {
           if (user) {
@@ -237,38 +251,16 @@ const App = () => {
   }, [user]);
 
   const handleLogin = (userProfile?: UserProfile) => {
-    // Attempt to authenticate with (Mock) Firebase to allow writes
     signInAnonymously(auth)
     .then(() => console.log("Authenticated with Firebase (Anonymous Session)"))
-    .catch((err: any) => {
-        console.error("Auth Error:", err);
-    });
+    .catch((err: any) => console.error("Auth Error:", err));
 
     setIsAuthenticated(true);
     localStorage.setItem('isAuth', 'true');
     
     if (userProfile) {
-      // Ensure we have a role for the logic to work
-      const completeProfile: UserProfile = {
-          role: 'teacher', // Default
-          status: 'active',
-          ...userProfile
-      };
-      
-      setUser(completeProfile);
-      localStorage.setItem('userProfile', JSON.stringify(completeProfile));
-    } else {
-      // Default Fallback
-      const defaultUser: UserProfile = {
-        name: 'Jane Doe',
-        email: 'teacher@idss.ba',
-        picture: 'https://ui-avatars.com/api/?name=Jane+Doe&background=2563eb&color=fff',
-        memberSince: Date.now(),
-        role: 'teacher',
-        status: 'active'
-      };
-      setUser(defaultUser);
-      localStorage.setItem('userProfile', JSON.stringify(defaultUser));
+      setUser(userProfile);
+      localStorage.setItem('userProfile', JSON.stringify(userProfile));
     }
   };
 
@@ -288,6 +280,8 @@ const App = () => {
     setCurrentPrompt(prompt);
     setActiveTemplate(null);
     setActiveTab('editor');
+    // Close sidebar on mobile when selection made
+    if (window.innerWidth < 1024) setSidebarOpen(false);
   };
 
   const handleSelectTemplate = (template: SavedTemplate) => {
@@ -297,6 +291,7 @@ const App = () => {
           setActiveTemplate(template);
           setActiveTab('editor');
           setShowProfileMenu(false);
+          if (window.innerWidth < 1024) setSidebarOpen(false);
       }
   };
 
@@ -310,14 +305,12 @@ const App = () => {
       setShowProfileMenu(false);
   };
 
-  // Helper to format date
   const formatMemberDate = (timestamp?: number) => {
-      if (!timestamp) return 'Sep 2023'; // Fallback
+      if (!timestamp) return 'N/A';
       const date = new Date(timestamp);
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   };
 
-  // Helper to extract example usage
   const getExampleUsage = (desc: string) => {
     const parts = desc.split('Example Usage:');
     if (parts.length > 1) {
@@ -326,20 +319,16 @@ const App = () => {
     return desc;
   };
 
-  // Helper to filter tools based on user role
   const getVisibleTools = () => {
     if (!user) return [];
     return PROMPT_DEFINITIONS.filter(def => {
-        // If no allowedRoles defined, available to all
         if (!def.allowedRoles || def.allowedRoles.length === 0) return true;
-        // Check if user role is in allowed list
         return def.allowedRoles.includes(user.role || 'teacher');
     });
   };
 
   const visibleTools = getVisibleTools();
 
-  // If not authenticated, show Login screen
   if (!isAuthenticated) {
     return (
       <ToastProvider>
@@ -350,9 +339,8 @@ const App = () => {
 
   return (
     <ToastProvider>
-      <div className={`flex h-screen bg-slate-50 overflow-hidden font-sans transition-colors duration-200 ${darkMode ? 'dark:bg-slate-900' : ''}`}>
+      <div className={`flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden font-sans transition-colors duration-200`}>
         
-        {/* Settings Modal */}
         <SettingsModal 
             isOpen={showSettingsModal} 
             onClose={() => setShowSettingsModal(false)}
@@ -361,7 +349,6 @@ const App = () => {
             user={user}
         />
 
-        {/* New Prompt Request Modal */}
         <NewPromptModal 
             isOpen={showNewPromptModal}
             onClose={() => setShowNewPromptModal(false)}
@@ -371,21 +358,32 @@ const App = () => {
         {/* Mobile Sidebar Overlay */}
         {!sidebarOpen && (
           <div className="lg:hidden fixed top-4 left-4 z-50">
-            <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white shadow-md rounded-md">
-              <Menu size={20} className="text-slate-600" />
+            <button 
+                onClick={() => setSidebarOpen(true)} 
+                className="p-2 bg-white dark:bg-slate-800 shadow-md rounded-md text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+            >
+              <Menu size={20} />
             </button>
           </div>
+        )}
+        
+        {/* Mobile Backdrop */}
+        {sidebarOpen && (
+            <div 
+                className="lg:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity"
+                onClick={() => setSidebarOpen(false)}
+            />
         )}
 
         {/* Sidebar */}
         <aside 
-          style={{ width: `${sidebarWidth}px` }}
-          className={`fixed inset-y-0 left-0 z-40 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col flex-shrink-0
+          style={{ width: window.innerWidth >= 1024 ? `${sidebarWidth}px` : '80%' }}
+          className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col flex-shrink-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-slate-100 flex-shrink-0">
-            <div className="flex items-center gap-2 font-bold text-xl text-slate-800">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+            <div className="flex items-center gap-2 font-bold text-xl text-slate-800 dark:text-white">
               <img 
                 src="https://i.postimg.cc/B61fmVMV/IDSS_Logo_D1.png" 
                 alt="IDSS Logo" 
@@ -398,23 +396,22 @@ const App = () => {
             </button>
           </div>
 
-          {/* Scrollable Navigation Area */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {/* Navigation */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900">
             <nav className="flex flex-col gap-1 pb-4 pt-4">
               <SidebarItem 
                 icon={Layout} 
                 label="Dashboard" 
                 active={activeTab === 'dashboard'} 
-                onClick={() => { setActiveTab('dashboard'); setCurrentPrompt(null); setActiveTemplate(null); }} 
+                onClick={() => { setActiveTab('dashboard'); setCurrentPrompt(null); setActiveTemplate(null); if(window.innerWidth < 1024) setSidebarOpen(false); }} 
               />
 
-              {/* ADMIN PANEL LINK - Only Visible to Admins */}
               {user?.role === 'admin' && (
                 <SidebarItem 
                   icon={Shield} 
                   label="Admin Panel" 
                   active={activeTab === 'admin'} 
-                  onClick={() => { setActiveTab('admin'); setCurrentPrompt(null); setActiveTemplate(null); }}
+                  onClick={() => { setActiveTab('admin'); setCurrentPrompt(null); setActiveTemplate(null); if(window.innerWidth < 1024) setSidebarOpen(false); }}
                   badge="NEW"
                 />
               )}
@@ -436,51 +433,39 @@ const App = () => {
                   />
                 );
               })}
-
-              {visibleTools.length === 0 && (
-                  <div className="px-6 py-4 text-sm text-slate-500 italic text-center">
-                      No specific tools assigned to your role yet.
-                  </div>
-              )}
             </nav>
           </div>
 
-          {/* User Footer (Pinned) */}
-          <div className="p-4 border-t border-slate-100 bg-white flex-shrink-0 relative" ref={profileMenuRef}>
+          {/* User Footer */}
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 relative" ref={profileMenuRef}>
             
-            {/* Expanded Profile Menu (Popover) */}
             {showProfileMenu && (
-              <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-2 z-50 w-72 -ml-4 flex flex-col max-h-[80vh]">
-                <div className="p-4 bg-slate-50 border-b border-slate-100 flex-shrink-0">
+              <div className="absolute bottom-full left-4 right-4 mb-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in slide-in-from-bottom-2 z-50 w-72 -ml-4 flex flex-col max-h-[80vh]">
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 flex-shrink-0">
                    <div className="flex items-center gap-3 mb-3">
                       <img 
                         src={user?.picture || "https://ui-avatars.com/api/?name=User&background=cbd5e1&color=fff"} 
                         alt="User" 
-                        className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm" 
                       />
                       <div className="min-w-0">
                          <div className="flex items-center gap-1">
-                            <h4 className="font-bold text-slate-900 truncate">{user?.name}</h4>
+                            <h4 className="font-bold text-slate-900 dark:text-white truncate">{user?.name}</h4>
                             <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase truncate">{user?.role}</span>
                          </div>
-                         <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
                       </div>
                    </div>
                    <div className="flex gap-4 text-[10px] text-slate-400">
                       <div className="flex items-center gap-1">
                          <Calendar size={10} />
-                         <span>Member: {formatMemberDate(user?.memberSince)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                         <Clock size={10} />
-                         <span>Login: Just now</span>
+                         <span>Since: {formatMemberDate(user?.memberSince)}</span>
                       </div>
                    </div>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
                    <div className="space-y-1 mb-2">
-                       {/* RENAMED AND REPURPOSED BUTTON */}
                        <button 
                          onClick={handleNewPromptRequest}
                          className="w-full flex items-center gap-3 px-3 py-2.5 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm font-medium"
@@ -491,7 +476,7 @@ const App = () => {
 
                        <button 
                          onClick={handleSettings}
-                         className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                         className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                        >
                           <Settings size={18} />
                           System Settings
@@ -499,7 +484,7 @@ const App = () => {
                        
                        <button 
                          onClick={toggleDarkMode}
-                         className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                         className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                        >
                           <div className="flex items-center gap-3">
                              {darkMode ? <Moon size={18} /> : <Sun size={18} />}
@@ -511,9 +496,8 @@ const App = () => {
                        </button>
                    </div>
                    
-                   {/* Saved Templates Section within Popover */}
                    {savedTemplates.length > 0 && (
-                      <div className="pt-2 border-t border-slate-100">
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
                         <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                             <Bookmark size={12} /> Saved Templates
                         </div>
@@ -523,7 +507,7 @@ const App = () => {
                                     key={tpl.id}
                                     onClick={() => handleSelectTemplate(tpl)}
                                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors text-left
-                                      ${activeTemplate?.id === tpl.id ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-100'}`}
+                                      ${activeTemplate?.id === tpl.id ? 'bg-primary/10 text-primary dark:text-blue-300' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                 >
                                     <FileText size={14} className="flex-shrink-0" />
                                     <span className="truncate">{tpl.name}</span>
@@ -534,10 +518,10 @@ const App = () => {
                    )}
                 </div>
 
-                <div className="border-t border-slate-100 p-2 bg-slate-50/50 flex-shrink-0">
+                <div className="border-t border-slate-100 dark:border-slate-700 p-2 bg-slate-50/50 dark:bg-slate-900/50 flex-shrink-0">
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     >
                         <LogOut size={18} />
                         Log Out
@@ -546,38 +530,37 @@ const App = () => {
               </div>
             )}
 
-            {/* User Toggle Button */}
             <button 
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-slate-50 transition-colors text-left group"
+              className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left group"
             >
               <div className="relative">
                 <img 
                   src={user?.picture || "https://ui-avatars.com/api/?name=User&background=cbd5e1&color=fff"} 
                   alt="User" 
-                  className="w-9 h-9 rounded-full object-cover border border-slate-200 group-hover:border-primary transition-colors" 
+                  className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 group-hover:border-primary transition-colors" 
                 />
-                <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white rounded-full ${user?.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'}`}></div>
+                <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white dark:border-slate-900 rounded-full ${user?.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'}`}></div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
-                  <p className="text-sm font-medium text-slate-900 truncate group-hover:text-primary transition-colors">{user?.name || 'User'}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{user?.name || 'User'}</p>
                 </div>
-                <p className="text-xs text-slate-500 truncate capitalize">{user?.role || 'Educator'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate capitalize">{user?.role || 'Educator'}</p>
               </div>
               <ChevronUp size={16} className={`text-slate-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
           </div>
           
-          {/* Resize Handle */}
+          {/* Resize Handle (Desktop Only) */}
           <div 
              onMouseDown={startResizingSidebar}
-             className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-blue-500/20 z-50 transition-colors opacity-0 hover:opacity-100 active:opacity-100 active:bg-blue-500/50"
+             className="hidden lg:block absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-blue-500/20 z-50 transition-colors opacity-0 hover:opacity-100 active:opacity-100 active:bg-blue-500/50"
           />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-slate-50/50">
+        <main className="flex-1 overflow-auto bg-slate-50/50 dark:bg-slate-800/50 transition-colors duration-200">
           <ErrorBoundary>
             {activeTab === 'dashboard' && (
               <Dashboard onSelectPrompt={handleSelectPrompt} />
@@ -587,7 +570,7 @@ const App = () => {
             )}
             {activeTab === 'editor' && currentPrompt && (
               <EditorLayout 
-                key={activeTemplate ? activeTemplate.id : currentPrompt.id} // Force remount to reset state properly
+                key={activeTemplate ? activeTemplate.id : currentPrompt.id} 
                 prompt={currentPrompt} 
                 user={user} 
                 initialFormData={activeTemplate?.formData}

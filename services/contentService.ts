@@ -1,3 +1,4 @@
+
 import { GeneratedContent, SavedTemplate, ChatMessage } from '../types';
 
 // --- CONTENT MANAGEMENT (LocalStorage Implementation) ---
@@ -25,8 +26,24 @@ export const saveGeneratedContent = async (userId: string, content: Partial<Gene
       createdAt: Date.now(),
     } as GeneratedContent;
     
+    // Limit history to 50 items to prevent overflow
+    if (existing.length >= 50) {
+        existing = existing.slice(0, 49);
+    }
+    
     existing.unshift(newDoc); // Add to beginning
-    localStorage.setItem(key, JSON.stringify(existing));
+    
+    try {
+        localStorage.setItem(key, JSON.stringify(existing));
+    } catch (e: any) {
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+            console.error("Local storage quota exceeded. Clearing old data.");
+            // Drastic measure: Keep only last 5
+            localStorage.setItem(key, JSON.stringify(existing.slice(0, 5)));
+        } else {
+            throw e;
+        }
+    }
     return newDoc.id;
   } catch (e: any) {
     console.error("Error saving generated content locally: ", e);
@@ -76,7 +93,14 @@ export const saveTemplate = async (userId: string, template: Omit<SavedTemplate,
     };
     
     existing.push(newTemplate);
-    localStorage.setItem(key, JSON.stringify(existing));
+    try {
+        localStorage.setItem(key, JSON.stringify(existing));
+    } catch (e: any) {
+         if (e.name === 'QuotaExceededError' || e.code === 22) {
+             console.error("Storage full for templates");
+             return null;
+         }
+    }
     return newTemplate.id;
   } catch (e) {
     console.error("Error saving template locally", e);
@@ -135,7 +159,15 @@ export const deleteTemplate = async (templateId: string) => {
 export const saveChatSession = async (userId: string, promptId: string, messages: ChatMessage[]) => {
   try {
     const key = `chat_history_${userId}_${promptId}`;
-    localStorage.setItem(key, JSON.stringify(messages));
+    try {
+        localStorage.setItem(key, JSON.stringify(messages));
+    } catch (e: any) {
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+             // If chat is too long, keep last 20 messages
+             const truncated = messages.slice(-20);
+             localStorage.setItem(key, JSON.stringify(truncated));
+        }
+    }
   } catch (e) {
     console.error("Error saving chat session:", e);
   }

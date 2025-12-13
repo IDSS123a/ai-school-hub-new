@@ -157,3 +157,28 @@ export interface PromptRequestForm {
   callRequest: boolean;
   additionalContext: string;
 }
+
+// --- DASHBOARD & COLLABORATION TYPES ---
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'alert' | 'success';
+  date: string;
+}
+
+export interface Collaborator {
+  userId: string;
+  name: string;
+  picture: string;
+  color: string;
+  isTyping?: boolean;
+}
+
+export interface CollaborationEvent {
+  type: 'content_update' | 'presence_update' | 'typing_start' | 'typing_end' | 'client_leave';
+  promptId: string;
+  payload: any;
+  senderId: string;
+}

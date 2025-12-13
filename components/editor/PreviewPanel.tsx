@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { NarrativeData, EvaluationData, PromptDefinition, GroundingMetadata } from '../../types';
-import { Loader2, FileText, Image as ImageIcon, BarChart2, Sparkles, Brain, Link as LinkIcon } from 'lucide-react';
+import { Loader2, FileText, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 // Declare Quill on window
@@ -46,17 +46,36 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
         if (!isQuillInitialized.current) {
             // Check if Quill is loaded
             if (window.Quill) {
+                // Register custom icons if needed or rely on text if SVG fails to load from theme
+                // But for standard 'snow' theme, we can inject SVG icons for undo/redo if they are missing by default
+                const icons = window.Quill.import('ui/icons');
+                icons['undo'] = '<svg viewbox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="6 10 4 12 2 10 6 10"></polygon><path class="ql-stroke" d="M8.09,13.91A4.6,4.6,0,0,0,9,14,5,5,0,1,0,4,9"></path></svg>';
+                icons['redo'] = '<svg viewbox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="12 10 14 12 16 10 12 10"></polygon><path class="ql-stroke" d="M9.91,13.91A4.6,4.6,0,0,1,9,14a5,5,0,1,1,5-5"></path></svg>';
+
                 quillRef.current = new window.Quill(editorContainerRef.current, {
                     theme: 'snow',
                     modules: {
-                        toolbar: [
-                            [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'align': [] }],
-                            ['clean']
-                        ]
+                        history: {
+                            delay: 2000,
+                            maxStack: 500,
+                            userOnly: true
+                        },
+                        toolbar: {
+                            container: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'color': [] }, { 'background': [] }],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                [{ 'indent': '-1'}, { 'indent': '+1' }], 
+                                [{ 'align': [] }],
+                                ['clean'],
+                                ['undo', 'redo'] // Add undo/redo to toolbar
+                            ],
+                            handlers: {
+                                'undo': function() { this.quill.history.undo(); },
+                                'redo': function() { this.quill.history.redo(); }
+                            }
+                        }
                     }
                 });
                 
@@ -105,17 +124,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col relative">
+    <div className="h-full w-full flex flex-col relative bg-slate-100">
       
       {/* Prominent Loading Overlay */}
       {isGenerating && !content && (
          <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
              <div className="relative">
                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
-                     <Brain size={40} className="text-primary" />
-                 </div>
-                 <div className="absolute top-0 right-0">
-                     <Sparkles size={24} className="text-amber-400 animate-bounce" />
+                     <FileText size={40} className="text-primary" />
                  </div>
              </div>
              <h3 className="mt-6 text-xl font-bold text-slate-800">Generating Content</h3>
@@ -126,31 +142,34 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
          </div>
       )}
 
-      {/* Document View */}
+      {/* Document View - MAXIMIZED */}
       {activeView === 'document' && (
-        <div className="p-8 max-w-4xl mx-auto w-full h-full flex flex-col">
-            <div id="document-preview" className="bg-white shadow-lg rounded-xl h-full border border-slate-200 animate-in fade-in duration-500 relative flex flex-col overflow-hidden">
-            
-            <div className="p-6 border-b border-slate-200 bg-slate-50">
-                <div className="flex justify-between items-end">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">{formData.topic || formData.assignment || prompt.title}</h1>
-                        <p className="text-slate-500 text-xs mt-1">Generated by AI School Hub • {new Date().toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
-                        <div className="text-xs uppercase tracking-wider font-bold text-slate-400">{prompt.category}</div>
-                    </div>
-                </div>
-            </div>
+        <div className="w-full h-full flex flex-col">
+            <div id="document-preview" className="bg-white h-full shadow-md animate-in fade-in duration-500 relative flex flex-col overflow-hidden">
             
             {/* Content Area */}
             <div className="flex-1 bg-white relative overflow-y-auto custom-scrollbar">
+                 <style>
+                    {`
+                        .prose table { width: 100%; border-collapse: collapse; margin-top: 1em; margin-bottom: 1em; }
+                        .prose th, .prose td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
+                        .prose th { background-color: #f8fafc; font-weight: 600; color: #334155; }
+                        .prose tr:nth-child(even) { background-color: #fcfcfc; }
+                        .prose h1 { text-align: center; margin-bottom: 0.5rem; color: #1e293b; }
+                        .prose h2 { text-align: center; margin-top: 0; color: #475569; font-weight: 500; font-size: 1.25rem; }
+                        .prose h3 { color: #035EA1; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem; margin-top: 2rem; }
+                        .ql-editor { padding: 40px !important; max-width: 1000px; margin: 0 auto; height: auto !important; min-height: 100%; }
+                        .ql-toolbar.ql-snow { border: none; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 12px; position: sticky; top: 0; z-index: 10; }
+                        .ql-undo, .ql-redo { margin-left: 10px; }
+                    `}
+                 </style>
+                 
                  {/* 
                     If Generating: Show standard div with streaming content 
                     If Done: Show Quill Editor 
                  */}
                  {isGenerating ? (
-                    <div className="p-8 prose prose-slate max-w-none">
+                    <div className="p-8 prose prose-slate max-w-5xl mx-auto">
                          <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br/>') }} />
                          <div className="flex items-center gap-2 text-primary text-sm mt-4 animate-pulse">
                             <Loader2 size={14} className="animate-spin" />
@@ -158,14 +177,15 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
                          </div>
                     </div>
                  ) : (
-                    <div className="min-h-[500px] flex flex-col">
-                        <div ref={editorContainerRef} className="flex-1 text-base"></div>
+                    <div className="h-full flex flex-col bg-slate-50 overflow-y-auto">
+                        {/* The Editor container simulates the 'page' */}
+                        <div ref={editorContainerRef} className="bg-white shadow-sm min-h-full mx-auto w-full max-w-5xl"></div>
                     </div>
                  )}
 
-                 {/* Grounding Sources Section */}
+                 {/* Grounding Sources Section - Appended at bottom of scroll if available */}
                  {!isGenerating && groundingMetadata?.groundingChunks && groundingMetadata.groundingChunks.length > 0 && (
-                    <div className="p-8 border-t border-slate-100 bg-slate-50/50">
+                    <div className="p-8 border-t border-slate-100 bg-slate-50/50 max-w-5xl mx-auto">
                         <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
                             <LinkIcon size={14} /> Sources & Citations
                         </h4>
@@ -265,7 +285,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
                               <PolarGrid />
                               <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12 }} />
                               <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                              <Radar name="Score" dataKey="A" stroke="#2563eb" fill="#2563eb" fillOpacity={0.4} />
+                              <Radar name="Score" dataKey="A" stroke="#035EA1" fill="#035EA1" fillOpacity={0.4} />
                             </RadarChart>
                           </ResponsiveContainer>
                         ) : <div className="h-full bg-slate-100 animate-pulse rounded"></div>}
@@ -281,7 +301,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
                              <h4 className="font-semibold text-sm text-slate-900 mb-2">Suggestions for Improvement:</h4>
                              <ul className="space-y-2">
                                {evaluation.suggestions.map((s, i) => (
-                                  <li key={i} className="text-sm text-slate-700 bg-yellow-50 p-2 rounded border border-yellow-100">
+                                  <li key={i} className="text-sm text-slate-700 bg-amber-50 p-2 rounded border border-amber-100">
                                     💡 {s}
                                   </li>
                                ))}

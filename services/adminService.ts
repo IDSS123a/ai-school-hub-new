@@ -12,6 +12,10 @@ const generateMockUsers = (): UserProfile[] => {
     { name: "Emma Wilson", email: "emma.w@school.ba", role: "editor", status: "active" },
     { name: "John Doe", email: "john.d@school.ba", role: "teacher", status: "suspended" },
     { name: "Amina Babić", email: "amina.b@school.ba", role: "counselor", status: "active" },
+    // Add default demo users for convenience
+    { name: "Teacher Demo", email: "teacher@idss.ba", role: "teacher", status: "active" },
+    { name: "Director Demo", email: "director@idss.ba", role: "director", status: "active" },
+    { name: "Admin Demo", email: "admin@idss.ba", role: "admin", status: "active" }
   ];
 
   return mockNames.map((u, index) => {
@@ -44,7 +48,7 @@ const generateMockUsers = (): UserProfile[] => {
 };
 
 // Initialize DB
-const initAdminDB = () => {
+export const initAdminDB = () => {
   const existing = localStorage.getItem(ADMIN_STORAGE_KEY);
   if (!existing) {
     const seed = generateMockUsers();
@@ -133,4 +137,37 @@ export const addUser = async (user: Omit<UserProfile, 'id' | 'memberSince' | 'st
 export const getUserDetails = async (email: string) => {
   const users = initAdminDB();
   return users.find((u: UserProfile) => u.email === email) || null;
+};
+
+// New method to validate login against the mock DB
+export const authenticateUser = async (email: string): Promise<{ success: boolean; user?: UserProfile; message?: string }> => {
+    // Ensure DB is initialized
+    const users = initAdminDB();
+    const user = users.find((u: UserProfile) => u.email.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+        return { success: false, message: "User not found. Please contact your administrator." };
+    }
+
+    if (user.status === 'suspended') {
+        return { success: false, message: "Account suspended. Contact support." };
+    }
+
+    if (user.status === 'pending') {
+        return { success: false, message: "Account pending approval." };
+    }
+
+    // Update stats on successful login
+    user.stats = {
+        ...user.stats,
+        loginCount: (user.stats?.loginCount || 0) + 1,
+        lastLogin: Date.now()
+    };
+    
+    // Save back to DB
+    const index = users.findIndex((u: UserProfile) => u.email === user.email);
+    users[index] = user;
+    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(users));
+
+    return { success: true, user };
 };

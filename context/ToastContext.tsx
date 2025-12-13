@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
@@ -41,6 +42,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
+  // Uses mapped semantic classes (green -> secondary/cyan, red -> accent/dark blue, amber -> primary/yellow)
   const getIcon = (type: ToastType) => {
     switch (type) {
       case 'success': return <CheckCircle size={20} className="text-green-500" />;

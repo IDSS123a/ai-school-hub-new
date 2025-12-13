@@ -252,13 +252,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Ask your ${prompt.title}...`}
-            className="w-full pl-4 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm text-slate-800 placeholder-slate-400 shadow-inner"
+            className="w-full pl-4 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm text-slate-800 placeholder-slate-400 shadow-inner"
             disabled={isSending}
+            aria-label="Chat message input"
           />
           <button 
             type="submit"
             disabled={!input.trim() || isSending}
-            className="absolute right-2 top-2.5 p-2 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-primary transition-colors shadow-sm"
+            aria-label="Send message"
+            className="absolute right-2 top-2.5 p-2 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-primary transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
             <Send size={18} />
           </button>

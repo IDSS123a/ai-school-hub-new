@@ -1,5 +1,29 @@
 
-import { PromptDefinition } from '../types';
+import { PromptDefinition, Announcement } from '../types';
+
+export const SYSTEM_ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: '1',
+    title: 'System Maintenance',
+    message: 'The platform will undergo scheduled maintenance this Saturday at 2:00 AM EST. Expected downtime: 30 minutes.',
+    type: 'alert',
+    date: new Date().toISOString()
+  },
+  {
+    id: '2',
+    title: 'New Collaboration Features',
+    message: 'We have launched real-time collaboration! You can now edit documents simultaneously with colleagues in the same prompt view.',
+    type: 'success',
+    date: new Date(Date.now() - 86400000).toISOString()
+  },
+  {
+    id: '3',
+    title: 'Staff Meeting Reminder',
+    message: 'All staff meeting regarding the new curriculum standards is scheduled for next Friday.',
+    type: 'info',
+    date: new Date(Date.now() - 172800000).toISOString()
+  }
+];
 
 export const PROMPT_DEFINITIONS: PromptDefinition[] = [
   {

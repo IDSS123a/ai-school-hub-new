@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { X, Moon, Sun, Globe, Bell, Shield, Key } from 'lucide-react';
 import { UserProfile } from '../types';
+import { useToast } from '../context/ToastContext';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, darkMode, toggleDarkMode, user }) => {
+  const { addToast } = useToast();
   if (!isOpen) return null;
 
   const [activeTab, setActiveTab] = useState('general');
@@ -23,6 +26,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, darkMode
         month: 'long', 
         day: 'numeric' 
     });
+  };
+
+  const handleChangePassword = () => {
+      addToast("Password change functionality is simulated in this demo.", "info");
+  };
+
+  const handleDeleteAccount = () => {
+      if(window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
+          addToast("Account deletion request submitted to administrator.", "warning");
+      }
   };
 
   return (
@@ -144,14 +157,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, darkMode
                             <h3 className="font-semibold text-slate-900 dark:text-white mb-4 text-sm flex items-center gap-2">
                                 <Key size={16} /> Security
                             </h3>
-                            <button className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full sm:w-auto">
+                            <button onClick={handleChangePassword} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full sm:w-auto">
                                 Change Password
                             </button>
                         </div>
                         
                         <div className="border-t border-slate-100 dark:border-slate-700 pt-6">
                             <h3 className="font-semibold text-red-600 mb-4 text-sm">Danger Zone</h3>
-                            <button className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-sm w-full sm:w-auto">
+                            <button onClick={handleDeleteAccount} className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-sm w-full sm:w-auto">
                                 Delete Account
                             </button>
                         </div>
