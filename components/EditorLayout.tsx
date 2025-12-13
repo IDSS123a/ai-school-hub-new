@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { PromptDefinition, NarrativeData, EvaluationData, UserProfile, ContentType } from '../types';
+import { PromptDefinition, NarrativeData, EvaluationData, UserProfile, ContentType, GroundingMetadata } from '../types';
 import { streamContent, generateNarrativeAssets, evaluatePedagogy } from '../services/geminiService';
 import { saveGeneratedContent, saveTemplate } from '../services/contentService';
 import { useToast } from '../context/ToastContext';
@@ -28,6 +29,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
   const [content, setContent] = useState('');
   const [narrative, setNarrative] = useState<NarrativeData | null>(null);
   const [evaluation, setEvaluation] = useState<EvaluationData | null>(null);
+  const [groundingMetadata, setGroundingMetadata] = useState<GroundingMetadata | null>(null);
   const [activeView, setActiveView] = useState<'document' | 'narrative' | 'analytics' | 'chat'>('document');
   const [loadingExtras, setLoadingExtras] = useState(false);
   
@@ -52,6 +54,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
     setContent('');
     setNarrative(null);
     setEvaluation(null);
+    setGroundingMetadata(null);
     setActiveView('document');
   }, [prompt, initialFormData, user]);
 
@@ -64,6 +67,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
     setContent('');
     setNarrative(null);
     setEvaluation(null);
+    setGroundingMetadata(null);
     setActiveView('document');
     
     let userPrompt = `Task: ${prompt.title}\n`;
@@ -75,7 +79,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
     let fullContent = '';
 
     try {
-      addToast('Generating content...', 'info');
+      addToast('Generating content with Google Search...', 'info');
       await streamContent(
         'gemini-3-pro-preview', 
         prompt.systemInstruction,
@@ -83,6 +87,9 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
         (chunk) => {
           setContent(prev => prev + chunk);
           fullContent += chunk;
+        },
+        (metadata) => {
+            setGroundingMetadata(metadata);
         }
       );
       
@@ -93,7 +100,8 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
              type: prompt.title as unknown as ContentType, 
              title: formData['topic'] || formData['event_name'] || prompt.title,
              content: fullContent,
-             metadata: formData
+             metadata: formData,
+             groundingMetadata: groundingMetadata || undefined
           });
         } catch (e) {
           console.error("Failed to auto-save", e);
@@ -202,6 +210,8 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
                 table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
                 th, td { border: 1px solid #cbd5e0; padding: 8px; text-align: left; }
                 th { background-color: #f7fafc; font-weight: 600; }
+                .sources-section { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+                .source-item { font-size: 0.85em; color: #64748b; margin-bottom: 5px; }
                 
                 @media print {
                     body { padding: 0; }
@@ -210,6 +220,16 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
             </head>
             <body>
               ${content}
+              ${groundingMetadata?.groundingChunks ? `
+                <div class="sources-section">
+                  <h3>References & Sources</h3>
+                  <ul>
+                    ${groundingMetadata.groundingChunks.map(c => 
+                      c.web ? `<li class="source-item"><a href="${c.web.uri}" target="_blank">${c.web.title}</a></li>` : ''
+                    ).join('')}
+                  </ul>
+                </div>
+              ` : ''}
               <script>
                 // Wait for fonts to load slightly
                 setTimeout(() => {
@@ -471,6 +491,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ prompt, user, initialFormDa
                   content={content}
                   narrative={narrative}
                   evaluation={evaluation}
+                  groundingMetadata={groundingMetadata}
                   loadingExtras={loadingExtras}
                   isGenerating={isGenerating}
                   prompt={prompt}

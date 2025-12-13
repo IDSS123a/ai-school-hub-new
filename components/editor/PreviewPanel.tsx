@@ -1,6 +1,7 @@
+
 import React, { useEffect, useRef } from 'react';
-import { NarrativeData, EvaluationData, PromptDefinition } from '../../types';
-import { Loader2, FileText, Image as ImageIcon, BarChart2, Sparkles, Brain } from 'lucide-react';
+import { NarrativeData, EvaluationData, PromptDefinition, GroundingMetadata } from '../../types';
+import { Loader2, FileText, Image as ImageIcon, BarChart2, Sparkles, Brain, Link as LinkIcon } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 // Declare Quill on window
@@ -15,6 +16,7 @@ interface PreviewPanelProps {
   content: string;
   narrative: NarrativeData | null;
   evaluation: EvaluationData | null;
+  groundingMetadata: GroundingMetadata | null;
   loadingExtras: boolean;
   isGenerating: boolean;
   prompt: PromptDefinition;
@@ -27,6 +29,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   content,
   narrative,
   evaluation,
+  groundingMetadata,
   loadingExtras,
   isGenerating,
   prompt,
@@ -75,26 +78,20 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
             }
         } else if (quillRef.current && content && quillRef.current.root.innerHTML !== content) {
             // Only update if significantly different and not focused (basic check)
-            // Ideally we don't update from props if user is editing, but we do if generation just finished
-            // Since we remount on generation start/end, this logic is mostly for switching tabs
             const currentText = quillRef.current.getText();
-            // Simple heuristic: if editor is empty but content exists, paste it.
             if (currentText.trim().length === 0 && content.length > 0) {
                  quillRef.current.clipboard.dangerouslyPasteHTML(content);
             }
         }
     }
 
-    // Cleanup logic if needed, but Quill instance is usually persistent for the component lifecycle
     return () => {
-        // We don't destroy Quill here to avoid losing state on fast tab switches if we kept it alive,
-        // but since we conditionally render the div, we might need to reset.
         if (activeView !== 'document' || isGenerating) {
              isQuillInitialized.current = false;
              quillRef.current = null;
         }
     };
-  }, [activeView, isGenerating]); // Removed 'content' from deps to avoid loop
+  }, [activeView, isGenerating]);
 
   if (!content && !isGenerating) {
     return (
@@ -147,7 +144,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
             </div>
             
             {/* Content Area */}
-            <div className="flex-1 bg-white relative">
+            <div className="flex-1 bg-white relative overflow-y-auto custom-scrollbar">
                  {/* 
                     If Generating: Show standard div with streaming content 
                     If Done: Show Quill Editor 
@@ -155,15 +152,40 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
                  {isGenerating ? (
                     <div className="p-8 prose prose-slate max-w-none">
                          <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br/>') }} />
-                         {/* Streaming indicator */}
                          <div className="flex items-center gap-2 text-primary text-sm mt-4 animate-pulse">
                             <Loader2 size={14} className="animate-spin" />
                             <span>Writing...</span>
                          </div>
                     </div>
                  ) : (
-                    <div className="h-full flex flex-col">
+                    <div className="min-h-[500px] flex flex-col">
                         <div ref={editorContainerRef} className="flex-1 text-base"></div>
+                    </div>
+                 )}
+
+                 {/* Grounding Sources Section */}
+                 {!isGenerating && groundingMetadata?.groundingChunks && groundingMetadata.groundingChunks.length > 0 && (
+                    <div className="p-8 border-t border-slate-100 bg-slate-50/50">
+                        <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                            <LinkIcon size={14} /> Sources & Citations
+                        </h4>
+                        <ul className="space-y-2">
+                            {groundingMetadata.groundingChunks.map((chunk, idx) => (
+                                chunk.web ? (
+                                    <li key={idx} className="text-xs">
+                                        <a 
+                                            href={chunk.web.uri} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-primary hover:underline flex items-center gap-2"
+                                        >
+                                            <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">{idx + 1}</span>
+                                            {chunk.web.title}
+                                        </a>
+                                    </li>
+                                ) : null
+                            ))}
+                        </ul>
                     </div>
                  )}
             </div>

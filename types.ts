@@ -21,6 +21,8 @@ export interface PromptField {
   defaultValue?: string;
 }
 
+export type UserRole = 'admin' | 'teacher' | 'student' | 'director' | 'secretary' | 'counselor' | 'editor';
+
 export interface PromptDefinition {
   id: string;
   title: string;
@@ -29,6 +31,20 @@ export interface PromptDefinition {
   icon: string;
   fields: PromptField[];
   systemInstruction: string;
+  allowedRoles?: UserRole[]; 
+}
+
+export interface GroundingChunk {
+  web?: {
+    uri: string;
+    title: string;
+  };
+}
+
+export interface GroundingMetadata {
+  groundingChunks: GroundingChunk[];
+  groundingSupports?: any[];
+  webSearchQueries?: string[];
 }
 
 export interface GeneratedContent {
@@ -40,6 +56,7 @@ export interface GeneratedContent {
   metadata?: Record<string, any>;
   narrative?: NarrativeData;
   evaluation?: EvaluationData;
+  groundingMetadata?: GroundingMetadata;
 }
 
 export interface NarrativeData {
@@ -64,6 +81,7 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   timestamp: number;
+  groundingMetadata?: GroundingMetadata;
 }
 
 export interface UserState {
@@ -72,7 +90,6 @@ export interface UserState {
 
 // --- USER MANAGEMENT & ADMIN TYPES ---
 
-export type UserRole = 'admin' | 'teacher' | 'editor';
 export type UserStatus = 'active' | 'pending' | 'suspended';
 
 export interface UserAuditLog {
@@ -89,7 +106,7 @@ export interface UserUsageStats {
 }
 
 export interface UserProfile {
-  id?: string; // Optional for legacy compatibility
+  id?: string;
   name: string;
   email: string;
   picture: string;

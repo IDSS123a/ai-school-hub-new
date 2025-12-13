@@ -1,3 +1,4 @@
+
 import { UserProfile, UserRole, UserStatus, UserAuditLog } from '../types';
 
 const ADMIN_STORAGE_KEY = 'admin_users_db';
@@ -10,7 +11,7 @@ const generateMockUsers = (): UserProfile[] => {
     { name: "Marko Petrović", email: "marko.p@school.ba", role: "teacher", status: "pending" },
     { name: "Emma Wilson", email: "emma.w@school.ba", role: "editor", status: "active" },
     { name: "John Doe", email: "john.d@school.ba", role: "teacher", status: "suspended" },
-    { name: "Amina Babić", email: "amina.b@school.ba", role: "teacher", status: "active" },
+    { name: "Amina Babić", email: "amina.b@school.ba", role: "counselor", status: "active" },
   ];
 
   return mockNames.map((u, index) => {
@@ -102,6 +103,31 @@ export const deleteUser = async (email: string) => {
     return true;
   }
   return false;
+};
+
+export const addUser = async (user: Omit<UserProfile, 'id' | 'memberSince' | 'stats' | 'auditLogs'>) => {
+  const users = initAdminDB();
+  // Check if email exists
+  if (users.find((u: UserProfile) => u.email === user.email)) {
+    return { success: false, message: 'User with this email already exists' };
+  }
+
+  const newUser: UserProfile = {
+    ...user,
+    id: `user_${Date.now()}`,
+    memberSince: Date.now(),
+    stats: {
+        loginCount: 0,
+        totalSessionMinutes: 0,
+        lastLogin: Date.now(),
+        averageSessionMinutes: 0
+    },
+    auditLogs: [{ action: 'Account Created', timestamp: Date.now(), details: 'Created by Admin' }]
+  };
+  
+  users.unshift(newUser);
+  localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(users));
+  return { success: true, user: newUser };
 };
 
 export const getUserDetails = async (email: string) => {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   BookOpen, 
@@ -325,6 +326,19 @@ const App = () => {
     return desc;
   };
 
+  // Helper to filter tools based on user role
+  const getVisibleTools = () => {
+    if (!user) return [];
+    return PROMPT_DEFINITIONS.filter(def => {
+        // If no allowedRoles defined, available to all
+        if (!def.allowedRoles || def.allowedRoles.length === 0) return true;
+        // Check if user role is in allowed list
+        return def.allowedRoles.includes(user.role || 'teacher');
+    });
+  };
+
+  const visibleTools = getVisibleTools();
+
   // If not authenticated, show Login screen
   if (!isAuthenticated) {
     return (
@@ -405,8 +419,11 @@ const App = () => {
                 />
               )}
               
-              <div className="px-6 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mt-4">Tools</div>
-              {PROMPT_DEFINITIONS.map(def => {
+              <div className="px-6 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mt-4">
+                  Tools for {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Teacher'}
+              </div>
+              
+              {visibleTools.map(def => {
                 const Icon = icons[def.icon] || BookOpen;
                 return (
                   <SidebarItem 
@@ -419,6 +436,12 @@ const App = () => {
                   />
                 );
               })}
+
+              {visibleTools.length === 0 && (
+                  <div className="px-6 py-4 text-sm text-slate-500 italic text-center">
+                      No specific tools assigned to your role yet.
+                  </div>
+              )}
             </nav>
           </div>
 
@@ -438,7 +461,7 @@ const App = () => {
                       <div className="min-w-0">
                          <div className="flex items-center gap-1">
                             <h4 className="font-bold text-slate-900 truncate">{user?.name}</h4>
-                            {user?.role === 'admin' && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase">Admin</span>}
+                            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase truncate">{user?.role}</span>
                          </div>
                          <p className="text-xs text-slate-500 truncate">{user?.email}</p>
                       </div>
@@ -540,7 +563,7 @@ const App = () => {
                 <div className="flex items-center gap-1">
                   <p className="text-sm font-medium text-slate-900 truncate group-hover:text-primary transition-colors">{user?.name || 'User'}</p>
                 </div>
-                <p className="text-xs text-slate-500 truncate">{user?.email || 'Educator'}</p>
+                <p className="text-xs text-slate-500 truncate capitalize">{user?.role || 'Educator'}</p>
               </div>
               <ChevronUp size={16} className={`text-slate-400 transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>

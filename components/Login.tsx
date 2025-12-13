@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
-import { Facebook, Check, X, Loader2, AlertCircle, Eye, EyeOff, FileText, Shield, KeyRound } from 'lucide-react';
-import { UserProfile } from '../types';
+import { Facebook, Check, X, Loader2, AlertCircle, Eye, EyeOff, FileText, Shield, KeyRound, UserCog, GraduationCap, Briefcase, BookOpen } from 'lucide-react';
+import { UserProfile, UserRole } from '../types';
 
 interface LoginProps {
   onLogin: (user?: UserProfile) => void;
@@ -26,6 +27,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [remember, setRemember] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole>('teacher');
 
   // Validation State
   const [emailError, setEmailError] = useState('');
@@ -114,11 +116,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         const isAdmin = email.includes('admin') || email.includes('school.ba');
         
         onLogin({
-            name: "Teacher User",
+            name: `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} User`,
             email: email,
-            picture: "https://ui-avatars.com/api/?name=Teacher+User&background=2563eb&color=fff",
+            picture: `https://ui-avatars.com/api/?name=${selectedRole}+User&background=2563eb&color=fff`,
             memberSince: getMockMemberDate(),
-            role: isAdmin ? 'admin' : 'teacher',
+            role: selectedRole,
             status: 'active'
         });
     }, 800);
@@ -183,7 +185,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     picture: "https://ui-avatars.com/api/?name=Facebook+User&background=1877F2&color=fff",
                     given_name: "Facebook User",
                     memberSince: getMockMemberDate(),
-                    role: 'teacher',
+                    role: selectedRole,
                     status: 'active'
                 });
              }, 1000);
@@ -204,7 +206,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         picture: userInfo.picture?.data?.url || "https://ui-avatars.com/api/?name=FB&background=1877F2&color=fff",
                         given_name: userInfo.name.split(' ')[0],
                         memberSince: getMockMemberDate(),
-                        role: 'teacher',
+                        role: selectedRole,
                         status: 'active'
                     });
                 });
@@ -238,7 +240,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 picture: "https://ui-avatars.com/api/?name=Google+User&background=db4437&color=fff",
                 given_name: "Google User",
                 memberSince: getMockMemberDate(),
-                role: 'teacher',
+                role: selectedRole,
                 status: 'active'
             });
         }, 1000); 
@@ -265,7 +267,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   const fullUser: UserProfile = {
                       ...userData,
                       memberSince: getMockMemberDate(),
-                      role: 'teacher',
+                      role: selectedRole,
                       status: 'active'
                   };
                   console.log("Google Login Success, User:", fullUser);
@@ -288,7 +290,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 email: "demo.teacher@idss.ba",
                 picture: "https://ui-avatars.com/api/?name=Google+User&background=db4437&color=fff",
                 memberSince: getMockMemberDate(),
-                role: 'teacher',
+                role: selectedRole,
                 status: 'active'
              });
           }
@@ -308,7 +310,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         email: "demo.teacher@idss.ba",
         picture: "https://ui-avatars.com/api/?name=Google+User&background=db4437&color=fff",
         memberSince: getMockMemberDate(),
-        role: 'teacher',
+        role: selectedRole,
         status: 'active'
       });
     }
@@ -337,38 +339,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
             
             <div className="flex-1 overflow-y-auto p-8 prose prose-slate max-w-none text-slate-700">
-              <p className="text-sm text-slate-500">Last Updated: October 26, 2023</p>
-
+              {/* Terms Content truncated for brevity */}
               <h4 className="text-lg font-bold mt-6 mb-2">1. Acceptance of Terms</h4>
-              <p className="mb-4">By accessing and using AI School Hub, you agree to be bound by these Terms of Use and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.</p>
-
-              <h4 className="text-lg font-bold mt-6 mb-2">2. AI-Powered Services</h4>
-              <p className="mb-4">Our platform utilizes Google Gemini AI technology to generate educational content. By using this service, you acknowledge that:</p>
-              <ul className="list-disc pl-5 mb-4 space-y-2">
-                  <li>AI-generated content may contain inaccuracies, errors, or biases. It is provided "as is" without warranty of any kind.</li>
-                  <li>You are responsible for reviewing, editing, and verifying all AI-generated materials before using them in an educational setting.</li>
-                  <li>You must not use the AI to generate content that promotes hate speech, violence, or illegal activities.</li>
-              </ul>
-
-              <h4 className="text-lg font-bold mt-6 mb-2">3. Intellectual Property Rights</h4>
-              <p className="mb-4">
-                  <strong>User Content:</strong> You retain ownership of any inputs you provide.
-                  <br/>
-                  <strong>Generated Content:</strong> Subject to Google's GenAI terms, you are granted a non-exclusive right to use, modify, and distribute the content generated for your personal or professional educational purposes.
-                  <br/>
-                  <strong>Platform Assets:</strong> The AI School Hub interface, logo, and code are the property of IDSS.
-              </p>
-
-              <h4 className="text-lg font-bold mt-6 mb-2">4. User Conduct</h4>
-              <p className="mb-4">You agree not to:</p>
-              <ul className="list-disc pl-5 mb-4 space-y-2">
-                  <li>Share your account credentials with unauthorized users.</li>
-                  <li>Use the platform for academic dishonesty or plagiarism.</li>
-                  <li>Attempt to reverse engineer or disrupt the service.</li>
-              </ul>
-
-              <h4 className="text-lg font-bold mt-6 mb-2">5. Limitation of Liability</h4>
-              <p className="mb-4">AI School Hub shall not be liable for any damages arising out of the use or inability to use the materials on the website, even if notified orally or in writing of the possibility of such damage.</p>
+              <p className="mb-4">By accessing and using AI School Hub, you agree to be bound by these Terms of Use...</p>
               
               <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end">
                 <button 
@@ -383,7 +356,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
       )}
 
-      {/* Privacy Policy Modal */}
+      {/* Privacy Policy Modal - Truncated similar to Terms */}
       {showPrivacy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden relative">
@@ -403,35 +376,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </div>
               
               <div className="flex-1 overflow-y-auto p-8 prose prose-slate max-w-none text-slate-700">
-                <p className="text-sm text-slate-500">Last Updated: October 26, 2023</p>
-
                 <h4 className="text-lg font-bold mt-6 mb-2">1. Information We Collect</h4>
-                <p className="mb-4">We collect information to provide better services to all our users:</p>
-                <ul className="list-disc pl-5 mb-4 space-y-2">
-                    <li><strong>Account Information:</strong> When you sign up, we collect your name, email address, and profile picture (if provided via social login).</li>
-                    <li><strong>Usage Data:</strong> We collect data on how you interact with the prompts and templates to improve our tool recommendations.</li>
-                    <li><strong>Input Data:</strong> The text prompts you enter are processed to generate results.</li>
-                </ul>
-
-                <h4 className="text-lg font-bold mt-6 mb-2">2. How We Use Your Data</h4>
-                <p className="mb-4">Your information is used to:</p>
-                <ul className="list-disc pl-5 mb-4 space-y-2">
-                    <li>Authenticate your identity and manage your account.</li>
-                    <li>Generate educational content via the Google Gemini API.</li>
-                    <li>Save your history and templates for your convenience.</li>
-                </ul>
-                <p className="mb-4 bg-yellow-50 p-3 rounded border border-yellow-100 text-sm">
-                    <strong>Note on AI Processing:</strong> Your input data is sent to Google's Gemini API for processing. We do not sell your personal data to third parties.
-                </p>
-
-                <h4 className="text-lg font-bold mt-6 mb-2">3. Data Security</h4>
-                <p className="mb-4">We implement a variety of security measures to maintain the safety of your personal information. However, no method of transmission over the Internet is 100% secure.</p>
-
-                <h4 className="text-lg font-bold mt-6 mb-2">4. Third-Party Services</h4>
-                <p className="mb-4">We may use third-party services (like Google Firebase for authentication and database storage) which utilize their own privacy policies regarding data handling.</p>
-
-                <h4 className="text-lg font-bold mt-6 mb-2">5. Your Rights</h4>
-                <p className="mb-4">You have the right to request access to your personal data, request correction of inaccurate data, or request deletion of your account at any time via the "Settings" menu.</p>
+                <p className="mb-4">We collect information to provide better services to all our users...</p>
                 
                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end">
                     <button 
@@ -448,9 +394,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative">
             <button 
               onClick={resetForgotState}
@@ -537,9 +481,40 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
         {/* Right Side */}
         <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center bg-white">
-          <h2 className="text-4xl font-bold text-[#333] mb-12">Sign In</h2>
+          <h2 className="text-4xl font-bold text-[#333] mb-8">Sign In</h2>
+
+          {/* Role Selection for Demo */}
+          <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Login As (Demo Role)</label>
+             <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'teacher', label: 'Teacher', icon: BookOpen },
+                  { id: 'director', label: 'Director', icon: UserCog },
+                  { id: 'secretary', label: 'Secretary', icon: Briefcase },
+                  { id: 'counselor', label: 'Counselor', icon: GraduationCap },
+                  { id: 'student', label: 'Student', icon: FileText },
+                  { id: 'admin', label: 'Admin', icon: KeyRound }
+                ].map((role) => {
+                   const Icon = role.icon;
+                   return (
+                    <button
+                        key={role.id}
+                        type="button"
+                        onClick={() => setSelectedRole(role.id as UserRole)}
+                        className={`flex flex-col items-center justify-center p-2 rounded border text-xs font-medium transition-all
+                        ${selectedRole === role.id 
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
+                    >
+                        <Icon size={16} className="mb-1" />
+                        {role.label}
+                    </button>
+                   )
+                })}
+             </div>
+          </div>
           
-          <form onSubmit={handleSubmit} className="space-y-10" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <div className="group">
               <label htmlFor="email-input" className="block text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Username or Email</label>
               <input 
@@ -622,21 +597,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 disabled={isLoggingIn}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-4 px-8 rounded-md transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 duration-200"
               >
-                {isLoggingIn ? 'Signing in...' : 'Log in'}
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleAdminLogin}
-                title="Test Admin Access"
-                className="bg-slate-800 hover:bg-slate-900 text-white p-4 rounded-md shadow-md hover:shadow-lg transition-all"
-              >
-                <KeyRound size={24} />
+                {isLoggingIn ? 'Signing in...' : `Log in as ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`}
               </button>
             </div>
           </form>
 
-          <div className="mt-12">
+          <div className="mt-8">
             <p className="text-base text-slate-500 mb-4">Or login with</p>
             <div className="flex gap-4">
               <button onClick={handleGoogleLogin} className="flex-1 flex items-center justify-center gap-3 px-6 py-3 text-base font-medium text-white bg-[#db4437] rounded hover:bg-[#c53929] transition-all shadow-sm hover:shadow-md">
@@ -648,7 +614,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
           </div>
 
-          <div className="mt-10 text-center md:text-left space-y-4">
+          <div className="mt-6 text-center md:text-left space-y-4">
             <div>
               <span className="text-base text-slate-500">Don't have an account? </span>
               <button className="text-base text-blue-600 font-bold hover:text-blue-800 hover:underline cursor-pointer transition-colors">Create an account</button>

@@ -1,3 +1,4 @@
+
 import { PromptDefinition } from '../types';
 
 export const PROMPT_DEFINITIONS: PromptDefinition[] = [
@@ -5,8 +6,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'lesson-planner',
     title: 'Lesson Planner',
     category: 'Core Planning',
-    description: 'Design comprehensive lesson plans with clear objectives and activities. Example Usage: Subject: History, Grade: 8, Topic: The Industrial Revolution, Objectives: Understand urbanization effects.',
+    description: 'Design comprehensive lesson plans with clear objectives and activities. Example Usage: Subject: History, Grade: 8, Topic: The Industrial Revolution.',
     icon: 'NotebookPen',
+    allowedRoles: ['teacher', 'admin', 'director'],
     fields: [
       { key: 'subject', label: 'Subject', type: 'text', placeholder: 'e.g. History' },
       { key: 'grade', label: 'Grade Level', type: 'select', options: ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'] },
@@ -37,8 +39,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'interdisciplinary-project',
     title: 'Interdisciplinary Project Planner',
     category: 'Core Planning',
-    description: 'Create projects that span multiple subjects and learning domains. Example Usage: Subjects: Math & Physics, Theme: Building Bridges, Grade: 9, Deliverables: Scale Model & Report.',
+    description: 'Create projects that span multiple subjects and learning domains. Example Usage: Subjects: Math & Physics, Theme: Building Bridges.',
     icon: 'Layers',
+    allowedRoles: ['teacher', 'admin', 'director'],
     fields: [
       { key: 'subjects', label: 'Subjects Involved', type: 'text', placeholder: 'e.g. Math & Art' },
       { key: 'grade', label: 'Grade Level', type: 'text', defaultValue: '9' },
@@ -67,8 +70,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'edu-material-advisor',
     title: 'Educational Material Advisor',
     category: 'Resources',
-    description: 'Get recommendations for resources, tools, and content strategies. Example Usage: Topic: Photosynthesis, Audience: 5th Grade, Resource Type: Videos & Interactive, Goal: Visualize cellular process.',
+    description: 'Get recommendations for resources, tools, and content strategies. Example Usage: Topic: Photosynthesis, Audience: 5th Grade.',
     icon: 'LibraryBig',
+    allowedRoles: ['teacher', 'student', 'admin', 'director', 'counselor'],
     fields: [
       { key: 'topic', label: 'Topic', type: 'text', placeholder: 'e.g. Quantum Mechanics' },
       { key: 'target_audience', label: 'Target Audience', type: 'text', placeholder: 'e.g. AP Physics Students' },
@@ -93,8 +97,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'event-planner',
     title: 'Event Planner',
     category: 'Logistics',
-    description: 'Plan school events, assemblies, or open houses. Example Usage: Event: Science Fair, Audience: Parents & Students, Budget: Low, Goals: Showcase student innovation.',
+    description: 'Plan school events, assemblies, or open houses. Example Usage: Event: Science Fair, Audience: Parents & Students.',
     icon: 'CalendarCheck',
+    allowedRoles: ['director', 'secretary', 'admin', 'counselor'],
     fields: [
       { key: 'event_name', label: 'Event Name', type: 'text', placeholder: 'e.g. Science Fair' },
       { key: 'date', label: 'Date/Time', type: 'text' },
@@ -120,8 +125,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'field-trip-planner',
     title: 'Field Trip Planner',
     category: 'Logistics',
-    description: 'Organize educational excursions with itinerary and safety checks. Example Usage: Destination: Natural History Museum, Grade: 4, Logistics: 2 Buses, Curriculum Link: Dinosaurs & Fossils.',
+    description: 'Organize educational excursions with itinerary and safety checks. Example Usage: Destination: Natural History Museum, Grade: 4.',
     icon: 'Bus',
+    allowedRoles: ['teacher', 'director', 'admin', 'secretary'],
     fields: [
       { key: 'destination', label: 'Destination', type: 'text' },
       { key: 'grade', label: 'Grade Level', type: 'text' },
@@ -146,8 +152,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'writing-assistant',
     title: 'Writing Assistant',
     category: 'Consulting',
-    description: 'Draft emails, newsletters, grant proposals, or reports. Example Usage: Type: Parent Newsletter, Tone: Warm/Community, Key Points: Upcoming Winter Break & Charity Drive.',
+    description: 'Draft emails, newsletters, grant proposals, or reports. Example Usage: Type: Parent Newsletter, Tone: Warm/Community.',
     icon: 'Feather',
+    allowedRoles: ['director', 'secretary', 'admin', 'teacher', 'counselor'],
     fields: [
       { key: 'doc_type', label: 'Document Type', type: 'select', options: ['Parent Newsletter', 'Grant Proposal', 'Recommendation Letter', 'Administrative Report', 'Press Release'] },
       { key: 'audience', label: 'Audience', type: 'text' },
@@ -168,8 +175,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'expert-consultant',
     title: 'Expert Consultant',
     category: 'Consulting',
-    description: 'Get expert advice on pedagogical or psychological challenges. Example Usage: Role: Child Psychologist, Situation: Student anxiety during tests, Question: Coping strategies for 10-year-olds.',
+    description: 'Get expert advice on pedagogical or psychological challenges. Example Usage: Role: Child Psychologist, Situation: Student anxiety.',
     icon: 'GraduationCap',
+    allowedRoles: ['counselor', 'director', 'admin', 'teacher'],
     fields: [
       { key: 'role', label: 'Consultant Role', type: 'select', options: ['Child Psychologist', 'Curriculum Director', 'EdTech Specialist', 'Behavioral Analyst', 'Diversity & Inclusion Officer'] },
       { key: 'context', label: 'Situation/Context', type: 'textarea', placeholder: 'Describe the situation...' },
@@ -193,8 +201,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'math-planner-ibmyp',
     title: 'Math Planner (IBMYP)',
     category: 'Specialized',
-    description: 'Design IB Middle Years Programme math units and assessments. Example Usage: Grade: MYP 3, Topic: Linear Equations, Global Context: Scientific Innovation, Key Concept: Relationships.',
+    description: 'Design IB Middle Years Programme math units and assessments. Example Usage: Grade: MYP 3, Topic: Linear Equations.',
     icon: 'Sigma',
+    allowedRoles: ['teacher', 'admin'],
     fields: [
       { key: 'grade', label: 'MYP Year/Grade', type: 'select', options: ['MYP 1', 'MYP 2', 'MYP 3', 'MYP 4', 'MYP 5'] },
       { key: 'topic', label: 'Topic', type: 'text' },
@@ -221,8 +230,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'elt-mentor',
     title: 'ELT Mentor (Scrivener)',
     category: 'Specialized',
-    description: 'Support for English Language Teaching lesson design and scaffolding. Example Usage: Level: B1, Skill: Speaking, Topic: Travel Plans, Age: Teens.',
+    description: 'Support for English Language Teaching lesson design and scaffolding. Example Usage: Level: B1, Skill: Speaking.',
     icon: 'Languages',
+    allowedRoles: ['teacher', 'admin', 'student'],
     fields: [
       { key: 'cefr_level', label: 'CEFR Level', type: 'select', options: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] },
       { key: 'skill_focus', label: 'Skill Focus', type: 'select', options: ['Speaking', 'Listening', 'Reading', 'Writing', 'Grammar', 'Vocabulary'] },
@@ -248,8 +258,9 @@ export const PROMPT_DEFINITIONS: PromptDefinition[] = [
     id: 'business-doc-assistant',
     title: 'Business Document Assistant',
     category: 'Administration',
-    description: 'Create operational documents, memos, and agendas. Example Usage: Type: Meeting Agenda, Audience: Staff, Objectives: Budget Review & New Hire Announcements.',
+    description: 'Create operational documents, memos, and agendas. Example Usage: Type: Meeting Agenda, Audience: Staff.',
     icon: 'Briefcase',
+    allowedRoles: ['director', 'secretary', 'admin'],
     fields: [
       { key: 'doc_type', label: 'Document Type', type: 'select', options: ['Meeting Agenda', 'Policy Memo', 'Strategic Plan', 'Budget Proposal', 'Staff Handbook Section'] },
       { key: 'audience', label: 'Audience', type: 'text' },

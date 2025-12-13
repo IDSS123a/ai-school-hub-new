@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
-import { EvaluationData, NarrativeData, PromptRequestForm } from "../types";
+import { EvaluationData, NarrativeData, PromptRequestForm, GroundingMetadata } from "../types";
 
 // Initialize the Google GenAI SDK
 // API Key must be set in your environment variables (e.g. .env.local)
@@ -7,29 +8,35 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Streams content generation for the main document editor.
- * Uses gemini-3-pro-preview by default for complex reasoning.
+ * Uses gemini-3-pro-preview for high-quality complex text generation.
+ * Includes Google Search grounding.
  */
 export const streamContent = async (
-  modelName: string,
+  modelName: string, // Kept as argument for flexibility, but default usage should be 'gemini-3-pro-preview'
   systemInstruction: string,
   userPrompt: string,
-  onChunk: (text: string) => void
+  onChunk: (text: string) => void,
+  onMetadata?: (metadata: GroundingMetadata) => void
 ) => {
   try {
     const chat = ai.chats.create({
       model: modelName,
       config: {
         systemInstruction: systemInstruction,
-        // Note: For gemini-3-pro-preview (thinking model), do NOT set thinkingBudget to 0.
-        // Leaving it undefined allows the model to use its default thinking behavior.
+        tools: [{googleSearch: {}}], // Enable Google Search Grounding
       },
     });
 
     const result = await chat.sendMessageStream({ message: userPrompt });
 
     for await (const chunk of result) {
+      // Process text
       if (chunk.text) {
         onChunk(chunk.text);
+      }
+      // Process grounding metadata
+      if (chunk.candidates?.[0]?.groundingMetadata && onMetadata) {
+        onMetadata(chunk.candidates[0].groundingMetadata as GroundingMetadata);
       }
     }
   } catch (error) {
@@ -41,6 +48,7 @@ export const streamContent = async (
 /**
  * Handles follow-up chat messages that are context-aware of the generated content.
  * Reconstructs the conversation history for stateless interaction.
+ * Uses gemini-2.5-flash for responsiveness, or upgrades to Pro if deep reasoning is required.
  */
 export const sendChatFollowUp = async (
   modelName: string,
@@ -48,12 +56,8 @@ export const sendChatFollowUp = async (
   history: { role: 'user' | 'model', text: string }[],
   newMessage: string,
   customSystemInstruction?: string
-): Promise<string> => {
+): Promise<{ text: string, groundingMetadata?: GroundingMetadata }> => {
   try {
-    // We construct a chat session that knows about the document context
-    // Ideally, we would persist the 'chat' object, but for this stateless service architecture,
-    // we recreate the context in the system instruction and pass previous history.
-    
     const defaultInstruction = `You are a highly capable AI educational consultant and writing assistant. 
         
     The user has generated the following educational content: 
@@ -74,7 +78,6 @@ export const sendChatFollowUp = async (
     Output purely in plain text. Do NOT use Markdown (no **, #, []) or HTML tags. 
     Format your response as if writing a standard professional email or document using only spacing and capitalization for structure.`;
 
-    // Use the custom instruction if provided, but still inject the content context
     const instructionToUse = customSystemInstruction 
       ? `${customSystemInstruction}\n\nCONTEXT CONTENT:\n${contextContent.substring(0, 25000)}`
       : defaultInstruction;
@@ -82,7 +85,8 @@ export const sendChatFollowUp = async (
     const chat = ai.chats.create({
       model: modelName,
       config: {
-        systemInstruction: instructionToUse
+        systemInstruction: instructionToUse,
+        tools: [{googleSearch: {}}], // Allow search in chat as well
       },
       history: history.map(h => ({
         role: h.role,
@@ -91,7 +95,10 @@ export const sendChatFollowUp = async (
     });
 
     const result = await chat.sendMessage({ message: newMessage });
-    return result.text || "I couldn't generate a response.";
+    return {
+        text: result.text || "I couldn't generate a response.",
+        groundingMetadata: result.candidates?.[0]?.groundingMetadata as GroundingMetadata
+    };
   } catch (error) {
     console.error("Chat follow-up error:", error);
     throw error;
@@ -129,7 +136,6 @@ export const generateNarrativeAssets = async (content: string): Promise<Narrativ
   const textData = JSON.parse(summaryResponse.text || '{}');
 
   // 2. Generate Illustration using Gemini Image capabilities
-  // Create a visual prompt based on the summary
   const imagePrompt = `Create a high-quality, modern, flat-design educational illustration that visually represents this concept: "${textData.summary}". 
   Style: Professional vector art, clean lines, vibrant but professional colors (blues, teals, oranges). 
   Context: Suitable for a school presentation, textbook, or educational material. Minimalist and clear. No text in the image.`;
@@ -146,7 +152,6 @@ export const generateNarrativeAssets = async (content: string): Promise<Narrativ
         }
      });
 
-     // Extract image from response
      for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
         if (part.inlineData) {
             imageUrl = `data:image/png;base64,${part.inlineData.data}`;
@@ -155,7 +160,6 @@ export const generateNarrativeAssets = async (content: string): Promise<Narrativ
      }
   } catch (e) {
       console.warn("Image generation failed", e);
-      // We don't throw here to ensure the summary is still returned even if the image fails
   }
 
   return {
@@ -168,10 +172,11 @@ export const generateNarrativeAssets = async (content: string): Promise<Narrativ
 /**
  * Evaluates the pedagogical quality of the content.
  * Returns structured data including scores and feedback.
+ * Uses gemini-3-pro-preview for complex reasoning.
  */
 export const evaluatePedagogy = async (content: string): Promise<EvaluationData> => {
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-pro-preview', // Upgraded to Pro for complex reasoning
         contents: `Evaluate the following educational content based on pedagogical standards.
         Provide scores from 0 to 100 for Clarity, Relevance, Engagement, and Inclusivity.
         Provide a brief feedback paragraph and a list of specific improvement suggestions.
@@ -208,42 +213,11 @@ export const evaluatePedagogy = async (content: string): Promise<EvaluationData>
 /**
  * Takes a user's prompt request form and architects a valid JSON PromptDefinition.
  * This effectively acts as an AI Developer creating new tools.
+ * Uses gemini-3-pro-preview for complex structural engineering.
  */
 export const architectPromptFromRequest = async (request: PromptRequestForm): Promise<string> => {
-    const systemInstruction = `You are a Senior Prompt Engineer and System Architect.
-    Your task is to take a raw feature request for a new AI tool and convert it into a strictly structured JSON object 
-    that matches the 'PromptDefinition' interface used in our application.
-
-    The user input might be in Bosnian or English. You MUST output the final JSON content in ENGLISH.
-
-    The 'PromptDefinition' interface structure is:
-    {
-      id: string; // unique-kebab-case-id
-      title: string; // Clear, short title
-      category: string; // Suggest a category (e.g., "Planning", "Assessment", "Administrative")
-      description: string; // 1 sentence description + Example Usage string
-      icon: string; // Choose the most appropriate Lucide React icon name (e.g. "BookOpen", "Brain", "PenTool", "Calculator", "Users", "Calendar", "FileText")
-      fields: [ // Array of input fields the user needs to fill out
-         { 
-           key: string; 
-           label: string; 
-           type: 'text' | 'textarea' | 'select' | 'number';
-           options?: string[]; // Only for 'select' type
-           placeholder?: string;
-         }
-      ];
-      systemInstruction: string; // The high-quality metaprompt that instructs the AI how to behave based on the user's requirements.
-    }
-
-    CRITICAL INSTRUCTION FOR 'systemInstruction' field:
-    - This must be a highly detailed, professional prompt.
-    - It must incorporate the user's requested Tone, Style, Constraints, and Role.
-    - It must strictly enforce the output format requested (e.g. "No Markdown", "JSON only", etc).
-    
-    Output ONLY the valid JSON object. No markdown code fences.`;
-
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-pro-preview', // Upgraded to Pro for Prompt Engineering
         contents: `User Request Data:
         Project Title: ${request.projectTitle}
         Goal: ${request.primaryGoal}

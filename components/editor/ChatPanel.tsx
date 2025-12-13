@@ -1,6 +1,7 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { ChatMessage, UserProfile, PromptDefinition } from '../../types';
-import { Send, User, Sparkles, Loader2, Brain, UserCircle } from 'lucide-react';
+import { Send, User, Sparkles, Loader2, Brain, UserCircle, Link as LinkIcon } from 'lucide-react';
 import { sendChatFollowUp } from '../../services/geminiService';
 import { saveChatSession, getChatSession } from '../../services/contentService';
 import { useToast } from '../../context/ToastContext';
@@ -14,25 +15,30 @@ interface ChatPanelProps {
 
 // Function to generate dynamic system instruction based on the active tool
 const getDynamicSystemInstruction = (prompt: PromptDefinition) => {
-  return `ROLE DEFINITION:
-You are an expert AI specialized acting strictly as a: ${prompt.title}.
-Your core directive is to assist the user within the scope of this tool.
+  return `SYSTEM INSTRUCTION & PERSONA DEFINITION:
 
-ORIGINAL TOOL INSTRUCTIONS (STRICTLY ADHERE TO THESE):
+You are NOT a generic AI assistant. You are strictly the "${prompt.title}" tool defined below.
+Your entire behavior, tone, logic, and expertise must align with this specific role.
+
+### ORIGINAL TOOL CONFIGURATION:
+Title: ${prompt.title}
+Description: ${prompt.description}
+Core Directive (System Instruction):
 """
 ${prompt.systemInstruction}
 """
 
-TASK:
-The user has already generated content using this tool. You are now in a chat mode to help them refine, edit, expand, or answer questions about that specific content.
+### YOUR TASK IN THIS CHAT:
+The user has generated content using this tool. You are now assisting them in a follow-up conversation.
+- If the tool is "Event Planner", you are an Event Planner.
+- If the tool is "Lesson Planner", you are a Lesson Planner.
+- If the tool is "Expert Consultant", you are that specific Consultant.
 
-GUIDELINES:
-1. **Stay in Character**: Your persona is defined by the tool (${prompt.title}). Do not become a generic assistant.
-2. **Context Aware**: Use the provided generated content as your ground truth context.
-3. **Tone**: Professional, Educational, and Helpful. Matches the tone requested in the tool description: "${prompt.description}".
-4. **Format**: Use clear paragraphs and lists. Avoid markdown code blocks unless specifically asked for code.
-
-If the user asks for changes, apply the specific expertise of a ${prompt.title}.`;
+### GUIDELINES:
+1. **Adhere to the Persona**: Do not break character. Use the terminology and expertise relevant to ${prompt.title}.
+2. **Context**: The user's current generated content is provided. Use it as reference.
+3. **Response Style**: Professional, helpful, and concise. Use standard text formatting (paragraphs, lists). Avoid Markdown code blocks unless requested.
+4. **Subordination**: Your responses must be subordinate to the specific tool selected. Do not offer general advice outside this scope unless relevant to the specific task.`;
 };
 
 const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentContext }) => {
@@ -89,7 +95,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
     try {
       // Send to Gemini
       // We use the accumulated messages as history for context
-      const responseText = await sendChatFollowUp(
+      const response = await sendChatFollowUp(
         'gemini-2.5-flash',
         contentContext,
         updatedMessages.map(m => ({ role: m.role, text: m.text })),
@@ -100,8 +106,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: responseText,
-        timestamp: Date.now()
+        text: response.text,
+        timestamp: Date.now(),
+        groundingMetadata: response.groundingMetadata
       };
       
       const finalMessages = [...updatedMessages, aiMessage];
@@ -139,7 +146,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
               <div className="absolute inset-0 bg-blue-50 rounded-full animate-ping opacity-20"></div>
             </div>
             <h3 className="font-medium text-slate-900 mb-1">AI {prompt.title} Assistant</h3>
-            <p className="text-sm max-w-xs mx-auto">I'm here to help you refine your {prompt.title.toLowerCase()}. Ask me to expand sections, suggest additions, or critique the content.</p>
+            <p className="text-sm max-w-xs mx-auto">
+               I'm your dedicated {prompt.title}. How can I help you improve or expand your work?
+            </p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -176,6 +185,32 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
                   <div className="max-h-96 overflow-y-auto custom-scrollbar break-words pr-2">
                     <div dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>') }} />
                   </div>
+
+                  {/* Sources / Citations for Model Messages */}
+                  {msg.role === 'model' && msg.groundingMetadata?.groundingChunks && msg.groundingMetadata.groundingChunks.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                        <p className="text-[10px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                            <LinkIcon size={10} /> Sources found:
+                        </p>
+                        <ul className="space-y-1">
+                            {msg.groundingMetadata.groundingChunks.map((chunk, idx) => (
+                                chunk.web && (
+                                    <li key={idx} className="text-[10px]">
+                                        <a 
+                                            href={chunk.web.uri} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-primary hover:underline flex items-center gap-1.5 truncate max-w-[200px]"
+                                        >
+                                            <span className="w-3.5 h-3.5 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold shrink-0 text-[9px]">{idx + 1}</span>
+                                            {chunk.web.title}
+                                        </a>
+                                    </li>
+                                )
+                            ))}
+                        </ul>
+                    </div>
+                  )}
 
                   <div className={`text-[10px] mt-2 pt-2 border-t font-medium
                     ${msg.role === 'user' ? 'text-blue-400 border-blue-50' : 'text-slate-400 border-slate-50'}`}>
@@ -216,7 +251,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={`Ask for improvements to your ${prompt.title.toLowerCase()}...`}
+            placeholder={`Ask your ${prompt.title}...`}
             className="w-full pl-4 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm text-slate-800 placeholder-slate-400 shadow-inner"
             disabled={isSending}
           />
