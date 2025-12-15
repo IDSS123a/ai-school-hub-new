@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { PromptDefinition } from '../../types';
-import { Loader2, RefreshCw, ChevronRight, Save, Sparkles } from 'lucide-react';
+import { Loader2, RefreshCw, ChevronRight, Save, Sparkles, Clock } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 interface FormPanelProps {
   prompt: PromptDefinition;
@@ -20,10 +21,58 @@ const FormPanel: React.FC<FormPanelProps> = ({
   isGenerating,
   onSaveTemplate
 }) => {
+  const { addToast } = useToast();
   const [panelWidth, setPanelWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  
   const startX = useRef(0);
   const startWidth = useRef(0);
+  const formDataRef = useRef(formData);
+
+  // Keep ref in sync with latest data for the interval closure
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  // Restore Draft on Mount
+  useEffect(() => {
+    const key = `autosave_${prompt.id}`;
+    const savedData = localStorage.getItem(key);
+    
+    if (savedData) {
+        try {
+            const parsed = JSON.parse(savedData);
+            if (parsed && typeof parsed === 'object') {
+                // Restore values
+                Object.entries(parsed).forEach(([k, v]) => {
+                    if (typeof v === 'string') {
+                        onInputChange(k, v);
+                    }
+                });
+                addToast("Restored previous unsaved draft", "info");
+                setLastSaved(new Date());
+            }
+        } catch (e) {
+            console.error("Failed to restore draft", e);
+        }
+    }
+  }, [prompt.id]); // Only run when prompt changes (mount)
+
+  // Auto-save Interval (30 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+        const currentData = formDataRef.current;
+        // Only save if there is data
+        if (Object.keys(currentData).length > 0) {
+            const key = `autosave_${prompt.id}`;
+            localStorage.setItem(key, JSON.stringify(currentData));
+            setLastSaved(new Date());
+        }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [prompt.id]);
 
   const startResizing = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -117,6 +166,13 @@ const FormPanel: React.FC<FormPanelProps> = ({
       </div>
 
       <div className="p-6 border-t border-slate-100 bg-slate-50 space-y-3">
+        {lastSaved && (
+             <div className="flex items-center justify-end gap-1.5 text-[10px] text-slate-400 mb-2">
+                <Clock size={10} />
+                <span>Auto-saved {lastSaved.toLocaleTimeString()}</span>
+             </div>
+        )}
+
         <button
           onClick={onGenerate}
           disabled={isGenerating}
