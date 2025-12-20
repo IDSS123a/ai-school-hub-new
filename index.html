@@ -89,26 +89,21 @@
               neutral: slate,
               
               // Semantic States
-              // Error -> Accent (Dark/Strong)
               red: {
                 50: slate[50], 
                 100: slate[100],
                 200: slate[200],
-                500: palette.accent, // High contrast error
-                600: slate[800],
-                800: slate[900],
-                900: slate[950],
+                500: '#ef4444',
+                600: '#dc2626',
+                800: '#991b1b',
               },
-              // Success -> Secondary (Cyan)
               green: {
                 50: slate[50],
                 100: slate[100], 
-                500: palette.secondary, 
-                600: '#0689B8',
-                800: slate[800],
-                900: slate[900]
+                500: '#10b981', 
+                600: '#059669',
+                800: '#065f46',
               },
-              // Warning -> Primary (Yellow)
               amber: {
                 50: '#FFFBEB',
                 100: '#FEF3C7',
@@ -116,7 +111,6 @@
                 600: '#E6B218',
                 800: '#926C05'
               },
-              // Info/Brand -> Secondary/Accent
               blue: {
                 50: slate[50],
                 100: slate[100],
@@ -126,15 +120,14 @@
                 800: slate[900],
                 900: slate[950]
               },
-              purple: { // Map purple to Accent variants
+              purple: {
                 50: slate[50],
                 500: slate[600],
                 600: palette.accent
               },
               
-              // Whites and Blacks derived from Accent
-              white: '#FDFEFF', // Tint of blue
-              black: '#000F1A', // Shade of blue
+              white: '#FDFEFF',
+              black: '#000F1A',
             },
             animation: {
               'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
@@ -161,74 +154,63 @@
         --color-accent: #035EA1;
       }
 
-      /* Custom scrollbar for webkit */
+      /* Subtle modern custom scrollbar */
       ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
       }
       ::-webkit-scrollbar-track {
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #8ACAF0; /* slate-400 equivalent */
-        border-radius: 3px;
+        background-color: #D6EDF9;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: content-box;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #08ABE6; /* secondary */
+        background-color: #08ABE6;
       }
       
-      /* Colorlib Form Style Specifics */
-      .input-underline {
-        border-bottom-width: 2px;
-        border-color: #D6EDF9; /* slate-200 */
-        transition: border-color 0.3s ease;
+      .dark ::-webkit-scrollbar-thumb {
+        background-color: #1e293b;
       }
-      .input-underline:focus-within {
-        border-color: #FFCB29; /* primary */
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #08ABE6;
       }
-
-      /* Quill Overrides for Tailwind conflict */
+      
+      /* Quill Overrides */
       .ql-editor {
         min-height: 500px;
         font-family: 'Poppins', sans-serif;
         font-size: 1rem;
         line-height: 1.7;
-        padding-bottom: 3rem;
       }
       .ql-container.ql-snow {
         border: none !important;
       }
       .ql-toolbar.ql-snow {
         border: none !important;
-        border-bottom: 1px solid #D6EDF9 !important; /* slate-200 */
-        background-color: #F5FAFD; /* slate-50 */
-        border-radius: 0.75rem 0.75rem 0 0;
+        border-bottom: 1px solid #D6EDF9 !important;
+        background-color: #F5FAFD;
         padding: 12px 8px;
       }
 
-      /* Accessibility: High contrast focus rings for keyboard navigation */
       *:focus-visible {
-        outline: 2px solid #FFCB29; /* primary */
+        outline: 2px solid #FFCB29;
         outline-offset: 2px;
       }
 
-      /* Theme-specific Global Text Colors */
       body {
-        background-color: #F5FAFD; /* slate-50 (Light Mode Bg) */
-        color: #035EA1; /* Accent (Light Mode Text Primary) */
+        background-color: #F5FAFD;
+        color: #035EA1;
       }
 
       .dark body {
-        background-color: #011828; /* slate-950 (Dark Mode Bg) */
-        color: #FFCB29; /* Primary (Dark Mode Text Primary) */
-      }
-
-      /* In dark mode, mute paragraphs slightly for readability if not primary */
-      .dark p {
-        color: #E0F2FE; /* slate-100/secondary tint */
+        background-color: #011828;
+        color: #F5FAFD;
       }
       
-      /* Print Styles */
       @media print {
         aside, .no-print, button, .ql-toolbar {
           display: none !important;

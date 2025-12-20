@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { EvaluationData, NarrativeData, PromptRequestForm, GroundingMetadata } from "../types";
 
@@ -88,8 +87,8 @@ export const sendChatFollowUp = async (
       });
     }
 
-    // Fix: Explicitly define the message as a Content object with parts to resolve type ambiguity
-    const result = await chat.sendMessage({ message: { role: 'user', parts } });
+    // Fix: chat.sendMessage message property expects Part | Part[] and does not accept a role property.
+    const result = await chat.sendMessage({ message: parts });
     return {
         text: result.text || "I couldn't generate a response.",
         groundingMetadata: result.candidates?.[0]?.groundingMetadata as GroundingMetadata
@@ -134,7 +133,7 @@ export const generateNarrativeAssets = async (content: string): Promise<Narrativ
   
   let imageUrl = undefined;
   try {
-     // Fix: Use the standard Content object structure { parts: [...] } to resolve line 91 'parts' type error
+     // Fix: Use the standard Content object structure { parts: [...] } for image generation with nano banana series models.
      const imageResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {

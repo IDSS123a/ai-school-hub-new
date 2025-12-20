@@ -17,14 +17,10 @@ const getDynamicSystemInstruction = (prompt: PromptDefinition) => {
   return `SYSTEM INSTRUCTION & PERSONA DEFINITION:
 You are strictly the "${prompt.title}" tool. Your behavior, tone, and logic must align with this specific role.
 
-### ORIGINAL TOOL CONFIGURATION:
-Title: ${prompt.title}
-Description: ${prompt.description}
-
 ### YOUR TASK:
 Assisting in a follow-up conversation about generated educational content.
 If the user uploads a file, use it as grounding context for your answers.
-Professional, helpful, and concise. No Markdown code blocks unless requested.`;
+Professional, helpful, and concise.`;
 };
 
 const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentContext }) => {
@@ -128,7 +124,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 relative" role="region" aria-label="Chat assistant">
+    <div className="flex flex-col h-full bg-slate-50 relative" role="region" aria-label={`Chat with AI ${prompt.title}`}>
       {/* Chat History */}
       <div 
         className="flex-1 overflow-y-auto p-4 space-y-8 bg-slate-50"
@@ -145,11 +141,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
           <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8 text-center animate-in fade-in duration-500">
             <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 border border-slate-100 relative">
               <img src="https://i.postimg.cc/B61fmVMV/IDSS_Logo_D1.png" alt="" className="w-10 h-10 object-contain relative z-10" />
-              <div className="absolute inset-0 bg-blue-50 rounded-full animate-ping opacity-20"></div>
             </div>
             <h3 className="font-medium text-slate-900 mb-1">AI {prompt.title} Assistant</h3>
             <p className="text-sm max-w-xs mx-auto text-slate-500">
-               I'm your dedicated {prompt.title}. You can now upload files for additional context!
+               Ask questions about the generated content or upload files for more context.
             </p>
           </div>
         ) : (
@@ -157,33 +152,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
             <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
               <div className={`flex max-w-[90%] gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 overflow-hidden border bg-white shadow-sm ${msg.role === 'user' ? 'border-blue-200' : 'border-slate-200'}`}>
-                  {msg.role === 'user' ? (
-                    <img src={user?.picture || "https://ui-avatars.com/api/?name=User"} alt="User" className="w-full h-full object-cover" />
-                  ) : (
-                    <img src="https://i.postimg.cc/B61fmVMV/IDSS_Logo_D1.png" alt="AI School Hub" className="w-full h-full object-contain p-0.5" />
-                  )}
+                  <img src={msg.role === 'user' ? (user?.picture || "https://ui-avatars.com/api/?name=User") : "https://i.postimg.cc/B61fmVMV/IDSS_Logo_D1.png"} alt={msg.role === 'user' ? "You" : "AI"} className="w-full h-full object-cover" />
                 </div>
                 
                 <div className={`p-4 rounded-2xl shadow-sm text-sm leading-relaxed overflow-hidden flex flex-col ${msg.role === 'user' ? 'bg-white border-2 border-blue-100 text-slate-800 rounded-tr-none' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none'}`}>
                   <div className="max-h-96 overflow-y-auto custom-scrollbar break-words pr-2">
                     <div dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>') }} />
                   </div>
-
-                  {msg.role === 'model' && msg.groundingMetadata?.groundingChunks && msg.groundingMetadata.groundingChunks.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-500 mb-1 flex items-center gap-1"><LinkIcon size={10} /> Sources found:</p>
-                        <ul className="space-y-1">
-                            {msg.groundingMetadata.groundingChunks.map((chunk, idx) => chunk.web && (
-                                <li key={idx} className="text-[10px]">
-                                    <a href={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1.5 truncate max-w-[200px]">
-                                        <span className="w-3.5 h-3.5 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold shrink-0 text-[9px]">{idx + 1}</span>
-                                        {chunk.web.title}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                  )}
 
                   <div className={`text-[10px] mt-2 pt-2 border-t font-medium ${msg.role === 'user' ? 'text-blue-400 border-blue-50' : 'text-slate-400 border-slate-50'}`}>
                     {msg.role === 'user' ? 'You' : `AI ${prompt.title}`} • {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -203,7 +178,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
               <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex flex-col gap-2">
                  <div className="flex items-center gap-2 text-slate-700 font-medium text-sm">
                     <Loader2 size={14} className="animate-spin text-primary" />
-                    <span>Analyzing content & thinking...</span>
+                    <span>Thinking...</span>
                  </div>
               </div>
             </div>
@@ -214,16 +189,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
 
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-slate-200 flex-shrink-0 z-10 shadow-sm">
-        
-        {/* Attachment Preview */}
         {attachedFile && (
             <div className="max-w-4xl mx-auto mb-3 flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg animate-in slide-in-from-bottom-2">
                 <FileIcon size={16} className="text-primary" />
                 <span className="text-xs font-medium text-slate-700 truncate flex-1">{attachedFile.name}</span>
                 <button 
                   onClick={() => setAttachedFile(null)} 
-                  className="p-1 hover:bg-slate-200 rounded text-slate-500 focus:ring-2 focus:ring-primary outline-none"
-                  aria-label="Remove attachment"
+                  className="p-1 hover:bg-slate-200 rounded text-slate-500 focus-visible:ring-2 focus-visible:ring-primary outline-none transition-all"
+                  aria-label={`Remove file ${attachedFile.name}`}
                 >
                     <CloseIcon size={14} />
                 </button>
@@ -242,9 +215,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors shadow-inner focus:ring-2 focus:ring-primary outline-none"
-            aria-label="Attach document for context"
-            title="Attach file (PDF, TXT, Images)"
+            className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all shadow-inner focus-visible:ring-2 focus-visible:ring-primary outline-none hover:scale-105 active:scale-95"
+            aria-label="Attach context file (PDF, TXT, or Image)"
+            title="Attach file"
           >
             <Paperclip size={20} />
           </button>
@@ -257,12 +230,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
               placeholder={`Ask your ${prompt.title}...`}
               className="w-full pl-4 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm text-slate-800 placeholder-slate-400 shadow-inner"
               disabled={isSending}
-              aria-label="Chat input"
+              aria-label="Message text"
             />
             <button 
               type="submit"
               disabled={(!input.trim() && !attachedFile) || isSending}
-              className="absolute right-2 top-2.5 p-2 bg-primary text-slate-900 rounded-lg hover:bg-amber-400 disabled:opacity-50 transition-colors shadow-sm focus:ring-2 focus:ring-primary outline-none"
+              className="absolute right-2 top-2.5 p-2 bg-primary text-slate-900 rounded-lg hover:bg-amber-400 disabled:opacity-50 transition-all shadow-sm focus-visible:ring-2 focus-visible:ring-primary outline-none hover:scale-105 active:scale-95"
               aria-label="Send message"
             >
               <Send size={18} />
@@ -270,7 +243,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ prompt, userEmail, user, contentC
           </div>
         </form>
         <div className="text-center mt-2">
-          <span className="text-[10px] text-slate-400" id="chat-hint">AI can process PDFs, Text files and Images for context.</span>
+          <span className="text-[10px] text-slate-400" id="chat-hint">AI supports PDF, text and images as additional context.</span>
         </div>
       </div>
     </div>
