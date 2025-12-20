@@ -1,273 +1,102 @@
+
 {
   "project_metadata": {
     "name": "AI School Hub",
-    "repository_url": "https://github.com/IDSS123a/ai-school-hub-new",
-    "version": "1.0.0",
-    "application_type": "Single Page Application (SPA)",
-    "execution_target": "Modern evergreen browsers",
-    "rebuild_mode": "Full deterministic rebuild from scratch with complete functional and visual parity"
+    "description": "Enterprise-grade AI-powered education platform for teachers and administrators.",
+    "version": "1.1.0",
+    "type": "Single Page Application (SPA)",
+    "execution_environment": "Browser (No Build Step / Native ES Modules)"
   },
-
-  "ai_role_definition": {
-    "persona": "Senior Principal Software Engineer and UI Architect with 30+ years of experience",
-    "mandate": "Rebuild the entire application independently using production-grade standards and strict adherence to this specification",
-    "non_negotiables": [
-      "No assumptions beyond this document",
-      "No simplifications",
-      "No deviations in architecture, theming, or behavior"
-    ]
-  },
-
   "executive_summary": {
-    "purpose": "AI School Hub is an enterprise-grade, AI-powered educational productivity platform designed to centralize pedagogical content generation, administrative workflows, and school-wide collaboration without a traditional backend.",
-    "primary_objectives": [
-      "Streamline educational and administrative workflows",
-      "Standardize AI-assisted content generation",
-      "Simulate real-time collaboration using browser-native APIs",
-      "Provide a professional, minimal, distraction-free workspace"
+    "purpose": "Centralize educational workflows using Google Gemini AI, featuring advanced multi-modal chat support.",
+    "target_audience": [
+      "Teachers",
+      "Administrators",
+      "Directors",
+      "Counselors",
+      "Secretaries"
     ],
-    "target_roles": {
-      "teacher": "Lesson plans, worksheets, teaching materials",
-      "administrator": "Policies, announcements, schedules",
-      "director": "Strategic planning and summaries",
-      "counselor": "Consultation documentation",
-      "secretary": "Official communication drafts"
-    }
+    "core_features": [
+      "Role-based access control",
+      "AI content generation with streaming",
+      "Real-time collaboration simulation",
+      "Multi-modal chat (supports PDF/TXT/Image uploads for context)",
+      "Document export (PDF, DOCX, HTML)"
+    ]
   },
-
   "technical_architecture": {
-    "language_stack": [
-      "TypeScript (strict typing)",
-      "React TSX",
-      "HTML5",
-      "CSS3"
-    ],
-    "runtime_environment": {
-      "module_system": "Native ES Modules",
-      "bundler": "None",
-      "dependency_loading": "ESM.sh CDN imports defined directly in index.html"
-    },
-    "frameworks_and_libraries": {
-      "ui_framework": "React 18",
-      "styling": "Tailwind CSS via CDN with inline tailwind.config",
-      "icons": "lucide-react",
-      "charts": "recharts",
-      "rich_text_editor": "quill",
+    "stack": {
+      "language": "TypeScript / TSX",
+      "framework": "React 18",
+      "styling": "Tailwind CSS (CDN)",
+      "icons": "Lucide React",
       "ai_sdk": "@google/genai",
-      "export_tools": [
-        "html2pdf.js",
-        "html-docx-js-typescript"
-      ]
-    }
-  },
-
-  "routing_and_navigation": {
-    "strategy": "Conditional rendering only",
-    "implementation": "Single activeTab state managed in App.tsx",
-    "constraints": [
-      "No React Router",
-      "No URL-based routing",
-      "Navigation must not trigger page reloads"
-    ]
-  },
-
-  "authentication_and_roles": {
-    "authentication_type": "Mocked role-based authentication",
-    "implementation": {
-      "service": "adminService.ts",
-      "storage": "LocalStorage"
+      "charts": "Recharts",
+      "rich_text": "Quill.js"
     },
-    "roles": [
-      "teacher",
-      "administrator",
-      "director",
-      "counselor",
-      "secretary"
-    ],
-    "constraints": [
-      "No real authentication provider",
-      "Role determines UI access and available tools"
-    ]
-  },
-
-  "ai_prompt_system": {
-    "prompt_definitions": "Predefined only",
-    "source": "mockDatabase.ts",
-    "user_capabilities": [
-      "Execute existing AI tools",
-      "Request new tools via NewPromptModal"
-    ],
-    "restrictions": [
-      "Users cannot create executable prompts dynamically",
-      "New prompt requests are non-functional submissions only"
-    ]
-  },
-
-  "state_and_data_model": {
-    "state_management": [
-      "React useState",
-      "React useContext (ToastContext only)",
-      "React useRef where direct DOM interaction is required"
-    ],
-    "persistence": {
-      "storage": "LocalStorage",
-      "domains": [
-        "User sessions",
-        "Generated content",
-        "Prompt history",
-        "Admin records"
-      ]
+    "dependency_management": {
+      "method": "Import Map (ESM.sh)",
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom": "https://esm.sh/react-dom@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "@google/genai": "https://esm.sh/@google/genai",
+        "lucide-react": "https://esm.sh/lucide-react@0.358.0",
+        "recharts": "https://esm.sh/recharts@2.12.3?external=react,react-dom",
+        "html-docx-js-typescript": "https://esm.sh/html-docx-js-typescript@0.1.5"
+      }
     },
-    "real_time_collaboration": {
-      "mechanism": "BroadcastChannel API",
-      "scope": [
-        "Chat synchronization",
-        "Editor presence",
-        "Document updates"
-      ],
-      "limitations": "Same-origin, same-browser simulation only"
-    }
+    "data_persistence": "LocalStorage (Mock DB, User History, Auto-saves, Chat Session)",
+    "routing": "Conditional Rendering (No React Router)"
   },
-
   "design_system": {
-    "ui_philosophy": [
-      "Enterprise-grade minimalism",
-      "High readability",
-      "Low cognitive load",
-      "Clear visual hierarchy per component"
-    ],
-    "color_system": {
-      "base_colors": {
-        "primary": "#FFCB29",
-        "secondary": "#08ABE6",
-        "accent": "#035EA1"
-      },
-      "rules": [
-        "No hardcoded colors anywhere in the codebase",
-        "All colors must be derived from base colors",
-        "Opacity and brightness variants are allowed",
-        "Light Mode and Dark Mode must be fully preserved"
-      ]
-    },
-    "theming": {
-      "strategy": "Tailwind class-based theming",
-      "selectors": {
-        "light": ":root, [data-theme='light']",
-        "dark": ".dark, [data-theme='dark']"
-      },
-      "requirements": [
-        "Instant global theme switching",
-        "No visual regressions between themes",
-        "Consistent contrast across UI states"
-      ]
+    "palette": {
+      "primary": "#FFCB29",
+      "secondary": "#08ABE6",
+      "accent": "#035EA1",
+      "neutrals": "Slate"
     },
     "typography": {
-      "font_family": [
-        "Poppins",
-        "Inter",
-        "sans-serif"
-      ],
-      "hierarchy": "No global typographic rules; all sizing and weight handled via Tailwind utilities at component level"
+      "font_family": "Poppins, Inter, sans-serif"
     },
-    "accessibility": {
-      "standard": "General best practices",
-      "requirements": [
-        "Semantic HTML",
-        "Visible focus rings",
-        "Keyboard navigability"
-      ]
-    },
-    "animations": {
-      "allowed": true,
-      "style": "Subtle only",
-      "examples": [
-        "fade-in",
-        "slide",
-        "hover-scale"
-      ]
+    "ui_components": {
+      "login_screen": "Split layout.",
+      "dashboard": "Grid layout.",
+      "editor": "Three-pane layout with resizable sidebars."
     }
   },
-
-  "application_structure": {
-    "root_files": [
-      "index.html",
-      "index.tsx",
-      "App.tsx",
-      "types.ts",
-      "metadata.json",
-      "README.md"
-    ],
-    "components": {
-      "auth": ["Login.tsx"],
-      "core": ["Dashboard.tsx", "EditorLayout.tsx"],
-      "admin": ["AdminPanel.tsx"],
-      "modals": [
-        "SettingsModal.tsx",
-        "NewPromptModal.tsx",
-        "ShareModal.tsx"
-      ],
-      "infrastructure": ["ErrorBoundary.tsx"]
+  "file_structure_instructions": {
+    "root": {
+      "index.html": "Entry point with custom Tailwind config and palette.",
+      "index.tsx": "React mount.",
+      "App.tsx": "Router and layout shell.",
+      "types.ts": "Shared interfaces.",
+      "metadata.json": "Standard metadata."
     },
-    "editor_components": [
-      "FormPanel.tsx",
-      "PreviewPanel.tsx",
-      "ChatPanel.tsx"
-    ],
-    "context": ["ToastContext.tsx"],
-    "services": [
-      "geminiService.ts",
-      "firebase.ts",
-      "adminService.ts",
-      "contentService.ts",
-      "collaborationService.ts",
-      "mockDatabase.ts"
-    ]
+    "components": {
+      "Login.tsx": "Auth UI.",
+      "Dashboard.tsx": "Tool grid and announcements.",
+      "EditorLayout.tsx": "Main workspace.",
+      "AdminPanel.tsx": "User management.",
+      "SettingsModal.tsx": "App configuration.",
+      "NewPromptModal.tsx": "Prompt engineering request form.",
+      "ShareModal.tsx": "Collaboration UI."
+    },
+    "components_editor": {
+      "FormPanel.tsx": "Dynamic inputs with auto-save logic.",
+      "PreviewPanel.tsx": "Renders Quill editor, visuals, and analytics.",
+      "ChatPanel.tsx": "Context-aware chat with file upload support."
+    },
+    "services": {
+      "geminiService.ts": "Multi-modal AI integration using @google/genai.",
+      "adminService.ts": "Mock user database logic.",
+      "contentService.ts": "LocalStorage persistence.",
+      "collaborationService.ts": "BroadcastChannel sync logic."
+    }
   },
-
-  "rebuild_execution_order": [
-    "Create index.html with Tailwind CDN, font imports, and inline tailwind.config",
-    "Define global CSS variables for theme tokens",
-    "Implement index.tsx React mount",
-    "Implement App.tsx layout shell and activeTab logic",
-    "Build core UI components",
-    "Implement editor subsystem",
-    "Implement services layer",
-    "Wire context providers and error boundaries",
-    "Validate Light/Dark theme parity",
-    "Perform final functional and visual audit"
-  ],
-
-  "hard_constraints": {
-    "no_node_environment": true,
-    "no_backend_services": true,
-    "no_external_css_files": true,
-    "no_unapproved_dependencies": true,
-    "no_color_deviations": true,
-    "no_router_library": true
-  },
-
-  "quality_gates": {
-    "code_quality": [
-      "Strict TypeScript typing",
-      "No unused variables",
-      "Clear separation of concerns"
-    ],
-    "ui_quality": [
-      "Consistent spacing",
-      "Responsive layouts",
-      "No layout shifts or visual artifacts"
-    ],
-    "functional_quality": [
-      "All AI tools produce output",
-      "Streaming AI responses function correctly",
-      "Theme switching applies globally"
-    ]
-  },
-
-  "completion_criteria": {
-    "functional_parity": "100%",
-    "visual_parity": "100%",
-    "theme_integrity": "100%",
-    "architectural_compliance": "Mandatory"
+  "specific_logic_requirements": {
+    "multi_modal_chat": {
+      "implementation": "ChatPanel.tsx supports FileReader for converting files to base64. sendChatFollowUp in geminiService.ts handles inlineData parts for PDFs and Images."
+    }
   }
 }
