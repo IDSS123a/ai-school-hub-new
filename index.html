@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI School Hub</title>
+    <link rel="icon" href="https://i.postimg.cc/B61fmVMV/IDSS_Logo_D1.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Facebook SDK -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <script>
+      // Global Palette Definition
+      const palette = {
+        primary: '#FFCB29',   // Yellow/Gold
+        secondary: '#08ABE6', // Cyan/Light Blue
+        accent: '#035EA1',    // Dark Blue
+      };
+
+      // Derived Neutrals (Based on Accent/Dark Blue for cohesion)
+      const slate = {
+        50: '#F5FAFD',
+        100: '#EBF6FC',
+        200: '#D6EDF9',
+        300: '#B8DFF5',
+        400: '#8ACAF0',
+        500: '#08ABE6', // Anchored to secondary
+        600: '#0689B8',
+        700: '#035EA1', // Anchored to accent
+        800: '#024678',
+        900: '#012F50',
+        950: '#011828',
+      };
+
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Poppins', 'Inter', 'sans-serif'],
+            },
+            colors: {
+              // Base Palette
+              primary: {
+                DEFAULT: palette.primary,
+                foreground: slate[950],
+                // Opacity variants for "derived" logic
+                50: '#FFFDF5', // Lightest yellow tint
+                100: '#FFFBEB',
+                200: '#FEF3C7',
+                300: '#FDE68A',
+                400: '#FCD34D',
+                500: palette.primary,
+                600: '#E6B218',
+                700: '#B48706',
+                800: '#926C05',
+                900: '#785703',
+              },
+              secondary: {
+                DEFAULT: palette.secondary,
+                foreground: slate[950],
+                50: '#F0F9FF',
+                100: '#E0F2FE',
+                500: palette.secondary,
+                600: '#0284C7',
+                900: '#0C4A6E',
+              },
+              accent: {
+                DEFAULT: palette.accent,
+                foreground: '#FFFFFF',
+                50: '#F0F9FF',
+                500: palette.accent,
+                900: slate[950],
+              },
+              
+              // Semantic Overrides (Mapping legacy colors to new palette)
+              // Neutrals
+              slate: slate,
+              gray: slate,
+              zinc: slate,
+              neutral: slate,
+              
+              // Semantic States
+              red: {
+                50: slate[50], 
+                100: slate[100],
+                200: slate[200],
+                500: '#ef4444',
+                600: '#dc2626',
+                800: '#991b1b',
+              },
+              green: {
+                50: slate[50],
+                100: slate[100], 
+                500: '#10b981', 
+                600: '#059669',
+                800: '#065f46',
+              },
+              amber: {
+                50: '#FFFBEB',
+                100: '#FEF3C7',
+                500: palette.primary,
+                600: '#E6B218',
+                800: '#926C05'
+              },
+              blue: {
+                50: slate[50],
+                100: slate[100],
+                500: palette.secondary,
+                600: palette.accent,
+                700: slate[800],
+                800: slate[900],
+                900: slate[950]
+              },
+              purple: {
+                50: slate[50],
+                500: slate[600],
+                600: palette.accent
+              },
+              
+              white: '#FDFEFF',
+              black: '#000F1A',
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+              'subtle-bounce': 'subtleBounce 2s infinite ease-in-out',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              subtleBounce: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-3px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --color-primary: #FFCB29;
+        --color-secondary: #08ABE6;
+        --color-accent: #035EA1;
+      }
+
+      /* Subtle modern custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #D6EDF9;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #08ABE6;
+      }
+      
+      .dark ::-webkit-scrollbar-thumb {
+        background-color: #1e293b;
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #08ABE6;
+      }
+      
+      /* Quill Overrides */
+      .ql-editor {
+        min-height: 500px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+      .ql-container.ql-snow {
+        border: none !important;
+      }
+      .ql-toolbar.ql-snow {
+        border: none !important;
+        border-bottom: 1px solid #D6EDF9 !important;
+        background-color: #F5FAFD;
+        padding: 12px 8px;
+      }
+
+      *:focus-visible {
+        outline: 2px solid #FFCB29;
+        outline-offset: 2px;
+      }
+
+      body {
+        background-color: #F5FAFD;
+        color: #035EA1;
+      }
+
+      .dark body {
+        background-color: #011828;
+        color: #F5FAFD;
+      }
+      
+      @media print {
+        aside, .no-print, button, .ql-toolbar {
+          display: none !important;
+        }
+        body, main, #root {
+          background: white !important;
+          height: auto !important;
+          overflow: visible !important;
+          color: black !important;
+        }
+        .ql-editor {
+          min-height: auto !important;
+          padding: 0 !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "@google/genai": "https://esm.sh/@google/genai",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3",
+    "lucide-react": "https://esm.sh/lucide-react@0.358.0",
+    "recharts": "https://esm.sh/recharts@2.12.3?external=react,react-dom",
+    "firebase/": "https://esm.sh/firebase@10.13.0/",
+    "html-docx-js-typescript": "https://esm.sh/html-docx-js-typescript@0.1.5",
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="font-sans antialiased overflow-hidden transition-colors duration-300">
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

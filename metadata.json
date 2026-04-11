@@ -1,0 +1,5 @@
+{
+  "name": "AI School Hub",
+  "description": "Enterprise-grade AI-powered education platform for teachers featuring lesson planning, pedagogical assessment, and visual narrative generation using Google Gemini.",
+  "requestFramePermissions": []
+}
